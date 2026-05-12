@@ -1,9 +1,18 @@
 import { Module } from '@nestjs/common';
-import { CheckoutController } from './presentation/controllers/checkout.controller';
-import { CheckoutApplicationService } from './application/services/CheckoutApplicationService';
+
+import { AppController } from './presentation/controllers/app.controller';
+
+import { CheckoutController }
+from './presentation/controllers/checkout.controller';
 
 @Module({
-  controllers: [CheckoutController],
-  providers: [CheckoutApplicationService],
+  imports: [],
+
+  controllers: [
+    AppController,
+    CheckoutController,
+  ],
+
+  providers: [],
 })
 export class AppModule {}

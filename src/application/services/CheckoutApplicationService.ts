@@ -1,96 +1,170 @@
 import { Usuario } from '../../domain/entities/Usuario';
 import { Producto } from '../../domain/entities/Producto';
+import { Direccion } from '../../domain/entities/Direccion';
+import { Pago } from '../../domain/entities/Pago';
 import { Cupon } from '../../domain/entities/Cupon';
-import { Envio } from '../../domain/entities/Envio';
-import { BadRequestException } from '@nestjs/common';
+import { Orden } from '../../domain/entities/Orden';
+
+import { ConversorMonedaService }
+from '../../domain/services/ConversorMonedaService';
+
+import { CalculadorDescuentoService }
+from '../../domain/services/CalculadorDescuentoService';
+
+import { CalculadorEnvioService }
+from '../../domain/services/CalculadorEnvioService';
+
+import { ValidadorFraudeService }
+from '../../domain/services/ValidadorFraudeService';
+
+import { ProcesadorPagoService }
+from '../../domain/services/ProcesadorPagoService';
 
 export class CheckoutApplicationService {
 
- 
-  comprar(
+  constructor(
+    private conversorMonedaService:
+      ConversorMonedaService,
+
+    private calculadorDescuentoService:
+      CalculadorDescuentoService,
+
+    private calculadorEnvioService:
+      CalculadorEnvioService,
+
+    private validadorFraudeService:
+      ValidadorFraudeService,
+
+    private procesadorPagoService:
+      ProcesadorPagoService,
+  ) {}
+
+  async procesarCompra(
     usuario: Usuario,
     productos: Producto[],
-    _cupon: Cupon,
-    envio: Envio,
-  ): number {
-    this.validarDatosDeEntrada(usuario, productos, envio);
+    direccion: Direccion,
+    pago: Pago,
+    cupon: Cupon,
+  ) {
 
-    let total = this.calcularTotal(productos, envio);
-
-    total = this.aplicarDescuentoVip(usuario, total);
-
-    this.validarStock(productos);
-
-    this.descontarStock(productos);
-
-    this.validarYDescontarSaldo(usuario, total);
-
-    return total;
-  }
-
-
-
-  calcularTotal(productos: Producto[], envio: Envio): number {
-    let total = 0;
-
+    const orden = new Orden(
+      1,
+      usuario,
+      direccion,
+      pago.obtenerMoneda(),
+    );
+    
+    // =========================
+    // AGREGAR PRODUCTOS
+    // =========================
+    
     for (const producto of productos) {
-      total += producto.precio;
+      orden.agregarProducto(producto);
     }
+    
+    // =========================
+    // CALCULAR SUBTOTAL
+    // =========================
+    
+    const subtotal =
+      orden.calcularSubtotal();
 
-    total += envio.costo;
+    // =========================
+    // CALCULAR DESCUENTOS
+    // =========================
 
-    return total;
-  }
+    const descuento =
+      this.calculadorDescuentoService
+        .calcularDescuento(
+          usuario,
+          cupon,
+          subtotal,
+        );
 
-  validarDatosDeEntrada(
-    usuario: Usuario,
-    productos: Producto[],
-    envio: Envio,
-  ): void {
-    if (!usuario) {
-      throw new BadRequestException('usuario es obligatorio');
-    }
+    // =========================
+    // CALCULAR ENVÍO
+    // =========================
 
-    if (!Array.isArray(productos)) {
-      throw new BadRequestException('productos debe ser un arreglo');
-    }
+    const costoEnvio =
+      this.calculadorEnvioService
+        .calcularCostoEnvio(
+          orden,
+          direccion,
+          true,
+        );
 
-    if (productos.length === 0) {
-      throw new BadRequestException('productos no puede estar vacio');
-    }
+    // =========================
+    // TOTAL FINAL
+    // =========================
 
-    if (!envio) {
-      throw new BadRequestException('envio es obligatorio');
-    }
-  }
+    let totalFinal =
+      subtotal -
+      descuento +
+      costoEnvio;
 
-  aplicarDescuentoVip(usuario: Usuario, total: number): number {
-    if (usuario.esVip) {
-      total = total * 0.9;
-    }
+    // =========================
+    // VALIDAR FRAUDE
+    // =========================
 
-    return total;
-  }
+    this.validadorFraudeService
+      .validarCompra(
+        usuario,
+        pago,
+        direccion,
+      );
 
-  validarStock(productos: Producto[]): void {
-    for (const producto of productos) {
-      if (producto.stock <= 0) {
-        throw new Error(`El producto ${producto.nombre} no tiene stock disponible`);
-      }
-    }
-  }
+    // =========================
+    // CONVERSIÓN MONEDA
+    // =========================
 
-  descontarStock(productos: Producto[]): void {
-    for (const producto of productos) {
-      producto.stock = producto.stock - 1;
-    }
-  }
+    totalFinal =
+      await this.conversorMonedaService
+        .convertir(
+          totalFinal,
+          'USD',
+          pago.obtenerMoneda(),
+        );
 
-  validarYDescontarSaldo(usuario: Usuario, total: number): void {
-    if (usuario.saldo < total) {
-      throw new Error('Saldo insuficiente');
-    }
+    // =========================
+    // PROCESAR PAGO
+    // =========================
 
-    usuario.saldo = usuario.saldo - total;
+    this.procesadorPagoService
+      .procesarPago(
+        usuario,
+        pago,
+      );
+
+    // =========================
+    // RESPUESTA FINAL
+    // =========================
+
+    return {
+      mensaje:
+        'Compra procesada correctamente',
+    
+      resumenCompra: {
+        subtotal,
+        descuento,
+        costoEnvio,
+        totalFinal,
+        moneda:
+          pago.obtenerMoneda(),
+      },
+    
+      pago: {
+        estado:
+          pago.obtenerEstado(),
+        metodo:
+          pago.obtenerMetodo(),
+      },
+    
+      cliente: {
+        nombre:
+          usuario.nombre,
+        esVip:
+          usuario.esUsuarioVip(),
+      },
+    };
   }
 }
