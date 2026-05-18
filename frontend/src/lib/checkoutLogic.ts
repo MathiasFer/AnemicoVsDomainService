@@ -1,143 +1,40 @@
-import type { CheckoutBody, CheckoutUsuarioPayload, ProductoPayload } from '../types/checkout';
+import type { CheckoutBody, ProductoPayload } from '../types/checkout';
 
 export const PAIS_LOCAL_REF = 'Ecuador';
 
+// Catálogo sincronizado al 100% con los datos precargados en el InMemoryProductoRepository del backend
 export const CATALOGO: ProductoPayload[] = [
   {
-    id: 1,
+    id: 101,
     nombre: 'Laptop Gamer',
-    precio: 1299.99,
-    stock: 12,
-    peso: 2.4,
-    categoria: 'Hardware',
-    impuesto: 0,
+    precio: 1200.0,
+    stock: 5,
+    peso: 2.5,
+    categoria: 'Tecnologia',
+    impuesto: 0.12,
     envioRestringido: false,
   },
   {
-    id: 2,
-    nombre: 'Mouse RGB',
-    precio: 49.99,
-    stock: 80,
-    peso: 0.15,
-    categoria: 'Periféricos',
-    impuesto: 0,
+    id: 102,
+    nombre: 'Mouse Óptico',
+    precio: 20.0,
+    stock: 0, // Sin stock en base de datos para pruebas didácticas
+    peso: 0.1,
+    categoria: 'Accesorios',
+    impuesto: 0.12,
     envioRestringido: false,
   },
   {
-    id: 3,
-    nombre: 'Teclado Mecánico',
-    precio: 139.99,
-    stock: 40,
-    peso: 0.95,
-    categoria: 'Periféricos',
-    impuesto: 0,
-    envioRestringido: false,
+    id: 103,
+    nombre: 'Batería de Litio',
+    precio: 80.0,
+    stock: 10,
+    peso: 1.2,
+    categoria: 'Energia',
+    impuesto: 0.12,
+    envioRestringido: true, // Restringido para provocar error de logística
   },
 ];
-
-export function expandirCarrito(
-  cantidades: Record<number, number>,
-  catalogo: ProductoPayload[],
-): ProductoPayload[] {
-  const porId = new Map(catalogo.map((p) => [p.id, p]));
-  const lineas: ProductoPayload[] = [];
-
-  for (const [idStr, qty] of Object.entries(cantidades)) {
-    const id = Number(idStr);
-    const base = porId.get(id);
-    if (!base || qty <= 0) continue;
-    const n = Math.min(qty, 99);
-    for (let i = 0; i < n; i++) {
-      lineas.push({ ...base });
-    }
-  }
-
-  return lineas;
-}
-
-/** Replica CalculadorDescuentoService + Cupon del dominio (subtotal en USD). */
-export function calcularDescuentoUsd(
-  subtotal: number,
-  esVip: boolean,
-  cupon: {
-    activo: boolean;
-    porcentajeDescuento: number;
-    montoMinimo: number;
-  },
-): number {
-  let descuento = 0;
-
-  if (esVip) {
-    descuento += subtotal * 0.1;
-  }
-
-  const cuponAplica =
-    cupon.activo && subtotal >= cupon.montoMinimo;
-
-  if (cuponAplica) {
-    descuento += (subtotal * cupon.porcentajeDescuento) / 100;
-  }
-
-  return descuento;
-}
-
-/** Replica CalculadorEnvioService con prioridad=true como en CheckoutApplicationService. */
-export function calcularCostoEnvioUsd(
-  lineas: ProductoPayload[],
-  pais: string,
-  prioridad = true,
-): number {
-  let costoEnvio = 5;
-
-  const pesoTotal = lineas.reduce((acc, p) => acc + p.peso, 0);
-  costoEnvio += pesoTotal * 0.5;
-
-  if (pais.trim().toLowerCase() !== PAIS_LOCAL_REF.toLowerCase()) {
-    costoEnvio += 15;
-  }
-
-  if (prioridad) {
-    costoEnvio += 10;
-  }
-
-  for (const producto of lineas) {
-    if (producto.envioRestringido) {
-      throw new Error(
-        `El producto ${producto.nombre} tiene restricciones de envío`,
-      );
-    }
-  }
-
-  return costoEnvio;
-}
-
-export function calcularSubtotalUsd(lineas: ProductoPayload[]): number {
-  return lineas.reduce((acc, p) => acc + p.precio, 0);
-}
-
-/** Misma fuente de tasas que ExchangeRateApiProvider (USD base). */
-export async function obtenerTasaUsdA(moneda: string): Promise<number> {
-  if (moneda === 'USD') {
-    return 1;
-  }
-
-  const res = await fetch(
-    'https://api.exchangerate-api.com/v4/latest/USD',
-  );
-
-  if (!res.ok) {
-    throw new Error('Error obteniendo tasa de cambio');
-  }
-
-  const data = (await res.json()) as { rates?: Record<string, number> };
-  const tasa = data.rates?.[moneda];
-
-  if (typeof tasa !== 'number') {
-    throw new Error('No se encontró tasa de cambio');
-  }
-
-  return tasa;
-}
 
 export interface TotalesEstimadosUsd {
   subtotal: number;
@@ -147,69 +44,93 @@ export interface TotalesEstimadosUsd {
 }
 
 export function calcularTotalesUsd(
-  lineas: ProductoPayload[],
+  cartQty: Record<number, number>,
   esVip: boolean,
-  cupon: CheckoutBody['cupon'],
+  cupon: {
+    activo: boolean;
+    porcentajeDescuento: number;
+    montoMinimo: number;
+  },
   pais: string,
 ): TotalesEstimadosUsd {
-  const subtotal = calcularSubtotalUsd(lineas);
-  const descuento = calcularDescuentoUsd(subtotal, esVip, cupon);
-  const costoEnvio = calcularCostoEnvioUsd(lineas, pais);
-  const total = subtotal - descuento + costoEnvio;
+  let subtotal = 0;
+  let pesoTotal = 0;
+
+  for (const prod of CATALOGO) {
+    const qty = cartQty[prod.id] ?? 0;
+    if (qty > 0) {
+      subtotal += prod.precio * qty;
+      pesoTotal += prod.peso * qty;
+    }
+  }
+
+  // Descuento VIP
+  let descuento = 0;
+  if (esVip) {
+    descuento += subtotal * 0.10;
+  }
+
+  // Descuento Cupón
+  if (cupon.activo && subtotal >= cupon.montoMinimo) {
+    descuento += (subtotal * cupon.porcentajeDescuento) / 100;
+  }
+
+  // Costo Envió (Servicio del Dominio)
+  let costoEnvio = 0;
+  if (subtotal > 0) {
+    costoEnvio = 5; // Tarifa base
+    costoEnvio += pesoTotal * 0.5; // Por peso
+
+    // Envío internacional
+    if (pais.trim().toLowerCase() !== PAIS_LOCAL_REF.toLowerCase()) {
+      costoEnvio += 15;
+    }
+
+    // Prioridad por defecto
+    costoEnvio += 10;
+  }
+
+  const total = Math.max(0, subtotal - descuento + costoEnvio);
 
   return { subtotal, descuento, costoEnvio, total };
 }
 
-export async function construirCheckoutBody(params: {
-  usuario: CheckoutUsuarioPayload;
-  direccion: CheckoutBody['direccion'];
-  cupon: CheckoutBody['cupon'];
-  lineas: ProductoPayload[];
+export function construirCheckoutBody(params: {
+  usuarioId: number;
+  cartQty: Record<number, number>;
+  direccion: any;
   pagoMetodo: string;
   pagoMoneda: string;
-}): Promise<CheckoutBody> {
-  const { lineas, usuario, direccion, cupon, pagoMetodo, pagoMoneda } =
-    params;
+  cupon: any;
+}): CheckoutBody {
+  const { usuarioId, cartQty, direccion, pagoMetodo, pagoMoneda, cupon } = params;
 
-  const totales = calcularTotalesUsd(
-    lineas,
-    usuario.esVip,
-    cupon,
-    direccion.pais,
-  );
-
-  if (totales.total <= 0) {
-    throw new Error('El total debe ser mayor a cero');
-  }
-
-  const tasa = await obtenerTasaUsdA(pagoMoneda);
-  const monto = totales.total * tasa;
+  const productos = Object.entries(cartQty)
+    .filter(([_, qty]) => qty > 0)
+    .map(([idStr, qty]) => ({
+      id: Number(idStr),
+      cantidad: qty,
+    }));
 
   return {
-    usuario,
-    productos: lineas,
-    direccion,
-    cupon,
+    usuarioId,
+    productos,
+    direccion: {
+      pais: direccion.pais,
+      ciudad: direccion.ciudad,
+      calle: direccion.calle,
+      codigoPostal: direccion.codigoPostal,
+      referencia: direccion.referencia,
+    },
     pago: {
       metodo: pagoMetodo,
-      monto,
       moneda: pagoMoneda,
     },
+    cupon: cupon.activo ? {
+      codigo: cupon.codigo,
+      porcentajeDescuento: cupon.porcentajeDescuento,
+      activo: cupon.activo,
+      montoMinimo: cupon.montoMinimo,
+    } : null,
   };
-}
-
-export function mensajeErrorNest(body: unknown): string {
-  const b = body as {
-    message?: string | string[];
-  };
-
-  if (Array.isArray(b.message)) {
-    return b.message.join(', ');
-  }
-
-  if (typeof b.message === 'string') {
-    return b.message;
-  }
-
-  return 'Error desconocido al procesar la compra';
 }

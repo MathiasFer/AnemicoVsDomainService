@@ -20,8 +20,11 @@ export interface CheckoutUsuarioPayload {
 }
 
 export interface CheckoutBody {
-  usuario: CheckoutUsuarioPayload;
-  productos: ProductoPayload[];
+  usuarioId: number;
+  productos: Array<{
+    id: number;
+    cantidad: number;
+  }>;
   direccion: {
     pais: string;
     ciudad: string;
@@ -31,7 +34,6 @@ export interface CheckoutBody {
   };
   pago: {
     metodo: string;
-    monto: number;
     moneda: string;
   };
   cupon: {
@@ -39,10 +41,19 @@ export interface CheckoutBody {
     porcentajeDescuento: number;
     activo: boolean;
     montoMinimo: number;
-  };
+  } | null;
+}
+
+export interface PedagogicalStep {
+  step: number;
+  type: 'ENTITY' | 'DOMAIN_SERVICE';
+  source: string;
+  method: string;
+  detail: string;
 }
 
 export interface CheckoutSuccessResponse {
+  success: true;
   mensaje: string;
   resumenCompra: {
     subtotal: number;
@@ -57,12 +68,22 @@ export interface CheckoutSuccessResponse {
   };
   cliente: {
     nombre: string;
+    saldoRestante: number;
     esVip: boolean;
   };
+  pedagogicalTrace: PedagogicalStep[];
 }
 
-export interface NestErrorBody {
-  statusCode?: number;
-  message?: string | string[];
-  error?: string;
+export interface PedagogicalErrorTrace {
+  type: 'ENTITY' | 'DOMAIN_SERVICE' | 'VALUE_OBJECT';
+  source: string;
+  method: string;
+  explanation: string;
+  codeSnippet: string;
+}
+
+export interface CheckoutErrorResponse {
+  success: false;
+  error: string;
+  pedagogicalTrace: PedagogicalErrorTrace;
 }
