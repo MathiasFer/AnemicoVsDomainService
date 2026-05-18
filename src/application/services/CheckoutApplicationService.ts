@@ -64,6 +64,7 @@ export class CheckoutApplicationService {
     }
   }
 
+  // ❌ MODELO ANÉMICO: Lógica comercial (cálculo de descuento) filtrada en la Capa de Aplicación.
   aplicarDescuentoVip(usuario: Usuario, total: number): number {
     if (usuario.esVip) {
       total = total * 0.9;
@@ -72,6 +73,7 @@ export class CheckoutApplicationService {
     return total;
   }
 
+  // ❌ MODELO ANÉMICO: Validación externa de invariantes (debería validarse dentro de la entidad Producto).
   validarStock(productos: Producto[]): void {
     for (const producto of productos) {
       if (producto.stock <= 0) {
@@ -80,12 +82,14 @@ export class CheckoutApplicationService {
     }
   }
 
+  // ❌ MODELO ANÉMICO: Mutación directa externa que rompe el encapsulamiento del stock.
   descontarStock(productos: Producto[]): void {
     for (const producto of productos) {
       producto.stock = producto.stock - 1;
     }
   }
 
+  // ❌ MODELO ANÉMICO: Modificación de atributos del Usuario desde afuera, violando límites de agregados.
   validarYDescontarSaldo(usuario: Usuario, total: number): void {
     if (usuario.saldo < total) {
       throw new Error('Saldo insuficiente');
