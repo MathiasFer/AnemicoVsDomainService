@@ -1,12 +1,40 @@
 export class Usuario {
-    // MODELO ANÉMICO: Entidad "tonta" (bolsa de datos). 
-    // Sus propiedades están expuestas públicamente, permitiendo 
-    // que cualquier servicio externo modifique su saldo o estado a su antojo.
+    // MODELO ANÉMICO: Ilusión de encapsulamiento (Anti-patrón).
+    // El setter de saldo permite modificar el saldo desde afuera, sin verificar
+    // si el monto es negativo o si rompe alguna regla financiera interna.
+    
+    private id: number;
+    private nombre: string;
+    private saldo: number;
+    private puntosFidelidad: number;
+    private esVip: boolean;
+
     constructor(
-      public id: number,
-      public nombre: string,
-      public saldo: number,
-      public puntosFidelidad: number,
-      public esVip: boolean,
-    ) {}
-  }
+      id: number,
+      nombre: string,
+      saldo: number,
+      puntosFidelidad: number,
+      esVip: boolean,
+    ) {
+        this.id = id;
+        this.nombre = nombre;
+        this.saldo = saldo;
+        this.puntosFidelidad = puntosFidelidad;
+        this.esVip = esVip;
+    }
+
+    public getId(): number { return this.id; }
+    public setId(id: number): void { this.id = id; }
+
+    public getNombre(): string { return this.nombre; }
+    public setNombre(nombre: string): void { this.nombre = nombre; }
+
+    public getSaldo(): number { return this.saldo; }
+    public setSaldo(saldo: number): void { this.saldo = saldo; }
+
+    public getPuntosFidelidad(): number { return this.puntosFidelidad; }
+    public setPuntosFidelidad(puntosFidelidad: number): void { this.puntosFidelidad = puntosFidelidad; }
+
+    public getEsVip(): boolean { return this.esVip; }
+    public setEsVip(esVip: boolean): void { this.esVip = esVip; }
+}
