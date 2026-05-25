@@ -1,7 +1,6 @@
 import { DomainException } from '../exceptions/DomainException';
 
 export class Moneda {
-
   constructor(
     private codigo: string,
     private simbolo: string,
@@ -34,7 +33,7 @@ export class Moneda {
         'validarTasaCambio',
         'ENTITY',
         'La tasa de cambio debe ser un factor de conversión estrictamente positivo para evitar divisiones por cero o montos invertidos.',
-        'if (this.tasaCambio <= 0) { throw new Error(...); }'
+        'if (this.tasaCambio <= 0) { throw new Error(...); }',
       );
     }
   }
@@ -47,7 +46,7 @@ export class Moneda {
         'actualizarTasaCambio',
         'ENTITY',
         'Toda actualización de tasas de cambio mercantiles debe contemplar valores positivos.',
-        'if (nuevaTasa <= 0) { throw new Error(...); }'
+        'if (nuevaTasa <= 0) { throw new Error(...); }',
       );
     }
 
@@ -62,7 +61,7 @@ export class Moneda {
         'convertirMonto',
         'ENTITY',
         'No se pueden aplicar fórmulas de conversión monetaria sobre montos vacíos o negativos.',
-        'if (monto <= 0) { throw new Error(...); }'
+        'if (monto <= 0) { throw new Error(...); }',
       );
     }
 

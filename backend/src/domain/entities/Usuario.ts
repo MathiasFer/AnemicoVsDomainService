@@ -1,7 +1,6 @@
 import { DomainException } from '../exceptions/DomainException';
 
 export class Usuario {
-
   private historialCompras: number[] = [];
 
   constructor(
@@ -40,7 +39,7 @@ export class Usuario {
         'retirarSaldo',
         'ENTITY',
         'El monto a retirar de la cuenta del usuario debe ser un valor positivo.',
-        'if (monto <= 0) { throw new Error(...); }'
+        'if (monto <= 0) { throw new Error(...); }',
       );
     }
 
@@ -51,7 +50,7 @@ export class Usuario {
         'retirarSaldo',
         'ENTITY',
         `La entidad Usuario protege su integridad financiera e impide retiros por encima del saldo disponible. Saldo actual: $${this.saldo} USD, Monto solicitado: $${monto} USD.`,
-        'if (this.saldo < monto) { throw new Error("Saldo insuficiente"); }'
+        'if (this.saldo < monto) { throw new Error("Saldo insuficiente"); }',
       );
     }
 
@@ -66,7 +65,7 @@ export class Usuario {
         'agregarSaldo',
         'ENTITY',
         'El depósito de saldo debe ser estrictamente positivo.',
-        'if (monto <= 0) { throw new Error(...); }'
+        'if (monto <= 0) { throw new Error(...); }',
       );
     }
 
@@ -85,7 +84,7 @@ export class Usuario {
         'actualizarMonedaPreferida',
         'ENTITY',
         'El usuario debe tener una moneda preferida válida asignada.',
-        'if (!moneda) { throw new Error(...); }'
+        'if (!moneda) { throw new Error(...); }',
       );
     }
 

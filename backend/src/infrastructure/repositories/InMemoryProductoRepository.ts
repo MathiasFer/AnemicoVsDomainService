@@ -12,11 +12,29 @@ export class InMemoryProductoRepository implements IProductoRepository {
 
   private precargarDatos() {
     // 101. Producto Normal con Stock
-    this.productos.set(101, new Producto(101, 'Laptop Gamer', 1200, 5, 2.5, 'Tecnologia', 0.12, false));
+    this.productos.set(
+      101,
+      new Producto(
+        101,
+        'Laptop Gamer',
+        1200,
+        5,
+        2.5,
+        'Tecnologia',
+        0.12,
+        false,
+      ),
+    );
     // 102. Producto Sin Stock (para forzar error de stock insuficiente)
-    this.productos.set(102, new Producto(102, 'Mouse Óptico', 20, 0, 0.1, 'Accesorios', 0.12, false));
+    this.productos.set(
+      102,
+      new Producto(102, 'Mouse Óptico', 20, 0, 0.1, 'Accesorios', 0.12, false),
+    );
     // 103. Producto Restringido (para forzar error en CalculadorEnvioService)
-    this.productos.set(103, new Producto(103, 'Batería de Litio', 80, 10, 1.2, 'Energia', 0.12, true));
+    this.productos.set(
+      103,
+      new Producto(103, 'Batería de Litio', 80, 10, 1.2, 'Energia', 0.12, true),
+    );
   }
 
   reset() {
@@ -25,6 +43,7 @@ export class InMemoryProductoRepository implements IProductoRepository {
   }
 
   async obtenerTodos(): Promise<Producto[]> {
+    await Promise.resolve();
     return Array.from(this.productos.values()).map(
       (p) =>
         new Producto(
@@ -35,12 +54,13 @@ export class InMemoryProductoRepository implements IProductoRepository {
           p.obtenerPeso(),
           p.obtenerCategoria(),
           p.obtenerImpuesto(),
-          p.tieneEnvioRestringido()
-        )
+          p.tieneEnvioRestringido(),
+        ),
     );
   }
 
   async obtenerPorId(id: number): Promise<Producto | null> {
+    await Promise.resolve();
     const p = this.productos.get(Number(id));
     if (!p) return null;
     return new Producto(
@@ -51,11 +71,12 @@ export class InMemoryProductoRepository implements IProductoRepository {
       p.obtenerPeso(),
       p.obtenerCategoria(),
       p.obtenerImpuesto(),
-      p.tieneEnvioRestringido()
+      p.tieneEnvioRestringido(),
     );
   }
 
   async guardar(producto: Producto): Promise<void> {
+    await Promise.resolve();
     this.productos.set(producto.id, producto);
   }
 }

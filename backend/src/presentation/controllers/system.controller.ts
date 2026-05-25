@@ -1,4 +1,12 @@
-import { Controller, Get, Put, Post, Body, Param, Inject } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Body,
+  Param,
+  Inject,
+} from '@nestjs/common';
 import type { IUsuarioRepository } from '../../domain/interfaces/IUsuarioRepository';
 import type { IProductoRepository } from '../../domain/interfaces/IProductoRepository';
 
@@ -15,7 +23,7 @@ export class SystemController {
   @Get('usuarios')
   async getUsuarios() {
     const list = await this.usuarioRepository.obtenerTodos();
-    return list.map(u => ({
+    return list.map((u) => ({
       id: u.id,
       nombre: u.nombre,
       email: u.email,
@@ -29,7 +37,7 @@ export class SystemController {
   @Get('productos')
   async getProductos() {
     const list = await this.productoRepository.obtenerTodos();
-    return list.map(p => ({
+    return list.map((p) => ({
       id: p.id,
       nombre: p.nombre,
       precio: p.obtenerPrecio(),
@@ -44,7 +52,14 @@ export class SystemController {
   @Put('usuarios/:id')
   async updateUsuario(
     @Param('id') id: string,
-    @Body() body: { nombre?: string; saldo?: number; esVip?: boolean; nivelRiesgo?: number; monedaPreferida?: string }
+    @Body()
+    body: {
+      nombre?: string;
+      saldo?: number;
+      esVip?: boolean;
+      nivelRiesgo?: number;
+      monedaPreferida?: string;
+    },
   ) {
     const u = await this.usuarioRepository.obtenerPorId(Number(id));
     if (!u) {
@@ -54,8 +69,10 @@ export class SystemController {
     if (body.nombre !== undefined) u.nombre = body.nombre;
     if (body.saldo !== undefined) u.establecerSaldo(Number(body.saldo));
     if (body.esVip !== undefined) u.establecerEstadoVip(Boolean(body.esVip));
-    if (body.nivelRiesgo !== undefined) u.actualizarNivelRiesgo(Number(body.nivelRiesgo));
-    if (body.monedaPreferida !== undefined) u.actualizarMonedaPreferida(body.monedaPreferida);
+    if (body.nivelRiesgo !== undefined)
+      u.actualizarNivelRiesgo(Number(body.nivelRiesgo));
+    if (body.monedaPreferida !== undefined)
+      u.actualizarMonedaPreferida(body.monedaPreferida);
 
     await this.usuarioRepository.guardar(u);
     return {
@@ -68,7 +85,7 @@ export class SystemController {
         esVip: u.esUsuarioVip(),
         nivelRiesgo: u.obtenerNivelRiesgo(),
         monedaPreferida: u.obtenerMonedaPreferida(),
-      }
+      },
     };
   }
 
@@ -80,6 +97,9 @@ export class SystemController {
     if (typeof (this.productoRepository as any).reset === 'function') {
       (this.productoRepository as any).reset();
     }
-    return { success: true, message: 'Base de datos en memoria reiniciada exitosamente' };
+    return {
+      success: true,
+      message: 'Base de datos en memoria reiniciada exitosamente',
+    };
   }
 }

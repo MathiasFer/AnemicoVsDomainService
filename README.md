@@ -1,4 +1,4 @@
-# 🎓 Laboratorio de Diseño Orientado a Dominio (DDD)
+# Laboratorio de Diseño Orientado a Dominio (DDD)
 
 Este proyecto académico ha sido estructurado y refactorizado profesionalmente aplicando **Domain-Driven Design (DDD)** sobre **NestJS** en el backend y una interfaz interactiva de alta fidelidad en **React + Tailwind CSS** en el frontend.
 
@@ -6,7 +6,7 @@ El propósito principal es contrastar un **Modelo de Dominio Anémico** frente a
 
 ---
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 El proyecto está dividido limpiamente en dos componentes independientes en la raíz de `ecommerce-ddd`:
 
@@ -15,7 +15,7 @@ El proyecto está dividido limpiamente en dos componentes independientes en la r
 
 ---
 
-## 🚀 Cómo Iniciar el Laboratorio
+## Cómo Iniciar el Laboratorio
 
 ### 1. Iniciar el Servidor de Backend
 Abre una terminal en el directorio del backend y ejecuta:
@@ -37,25 +37,25 @@ npm run dev
 
 ---
 
-## 🧠 Escenarios Didácticos Preconfigurados para Pruebas
+## Escenarios Didácticos Preconfigurados para Pruebas
 
 Para evidenciar la robustez y control de las **Entidades Ricas** y **Servicios de Dominio**, la aplicación cuenta con datos precargados en memoria que puedes probar con un simple clic desde la interfaz:
 
-### 👤 Usuarios de Prueba (Buzón de Billetera y Fraude)
+### Usuarios de Prueba (Buzón de Billetera y Fraude)
 1.  **Juan Pérez (Usuario Estándar)**: Saldo de `$1000.00 USD`, nivel de riesgo `10%`. Transacción normal y exitosa.
 2.  **María López (Usuario VIP)**: Saldo de `$500.00 USD`, es VIP (`true`). Dispara automáticamente un **Descuento VIP del 10%** acumulable en el subtotal.
 3.  **Carlos Ruiz (Sin Saldo)**: Saldo de `$0.00 USD`. Dispara una excepción didáctica de **Saldo Insuficiente** coordinada por `ProcesadorPagoService`.
 4.  **Pedro Gómez (Alto Riesgo)**: Saldo de `$2000.00 USD`, riesgo del `90%`. Dispara una excepción de **Prevención de Fraude** coordinada por `ValidadorFraudeService` (bloquea a usuarios con riesgo > 80%).
 
-### 📦 Productos de Prueba (Inventario y Logística)
+### Productos de Prueba (Inventario y Logística)
 *   **Laptop Gamer (ID: 101)**: Precio `$1200.00 USD`, stock inicial `5` unidades. Envío nacional sin restricciones.
 *   **Mouse Óptico (ID: 102)**: Precio `$20.00 USD`, stock inicial `0` unidades. Dispara instantáneamente una excepción de **Stock Insuficiente** dentro de la entidad `Producto`.
 *   **Batería de Litio (ID: 103)**: Precio `$80.00 USD`, stock inicial `10` unidades, pero marcada como **restringida para envío aéreo** en aduanas. Dispara una excepción de **Restricción de Envío** en `CalculadorEnvioService`.
 
-### 🌍 Reglas Geográficas e Internacionales (Value Object Dirección)
+### Reglas Geográficas e Internacionales (Value Object Dirección)
 *   Ecuador se considera el país origen.
 *   Si cambias el país en la dirección (ej: Colombia, España), se disparará un recargo de envío de **+$15.00 USD** gestionado por `CalculadorEnvioService`.
 *   Si el total de una compra internacional supera los `$1000.00 USD`, el `ValidadorFraudeService` bloqueará la transacción, requiriendo verificación aduanera física.
 
-### 💱 Conversión Monetaria y Tipos de Cambio (Offline)
+### Conversión Monetaria y Tipos de Cambio (Offline)
 *   Si seleccionas una moneda distinta al USD (como EUR, COP, MXN, CLP), el frontend simulará la tasa de cambio con el backend, mostrando el monto exacto debitado en la divisa preferida.

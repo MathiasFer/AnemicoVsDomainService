@@ -1,7 +1,6 @@
 import { DomainException } from '../exceptions/DomainException';
 
 export class Direccion {
-
   constructor(
     private pais: string,
     private ciudad: string,
@@ -12,9 +11,7 @@ export class Direccion {
     this.validarCamposObligatorios();
   }
 
-  // =========================
-  // GETTERS
-  // =========================
+  /// GETTERS
 
   obtenerPais(): string {
     return this.pais;
@@ -36,9 +33,7 @@ export class Direccion {
     return this.referencia;
   }
 
-  // =========================
-  // COMPORTAMIENTO DEL DOMINIO
-  // =========================
+  /// COMPORTAMIENTO DEL DOMINIO
 
   private validarCamposObligatorios(): void {
     if (!this.pais.trim()) {
@@ -48,7 +43,7 @@ export class Direccion {
         'validarCamposObligatorios',
         'VALUE_OBJECT',
         'El objeto de valor Dirección se auto-valida en su constructor. No se puede crear una dirección sin un país válido.',
-        "if (!this.pais.trim()) { throw new Error(...); }"
+        'if (!this.pais.trim()) { throw new Error(...); }',
       );
     }
 
@@ -59,7 +54,7 @@ export class Direccion {
         'validarCamposObligatorios',
         'VALUE_OBJECT',
         'La ciudad es un componente obligatorio para poder calcular costos logísticos y de envío.',
-        "if (!this.ciudad.trim()) { throw new Error(...); }"
+        'if (!this.ciudad.trim()) { throw new Error(...); }',
       );
     }
 
@@ -70,7 +65,7 @@ export class Direccion {
         'validarCamposObligatorios',
         'VALUE_OBJECT',
         'La calle y número de puerta son indispensables para garantizar la entrega física del paquete.',
-        "if (!this.calle.trim()) { throw new Error(...); }"
+        'if (!this.calle.trim()) { throw new Error(...); }',
       );
     }
 
@@ -81,7 +76,7 @@ export class Direccion {
         'validarCamposObligatorios',
         'VALUE_OBJECT',
         'El código postal es obligatorio para clasificar geográficamente el destino del envío.',
-        "if (!this.codigoPostal.trim()) { throw new Error(...); }"
+        'if (!this.codigoPostal.trim()) { throw new Error(...); }',
       );
     }
   }
@@ -94,7 +89,7 @@ export class Direccion {
         'actualizarReferencia',
         'VALUE_OBJECT',
         'La referencia de la dirección debe contener indicaciones reales de despacho para el transportista.',
-        "if (!nuevaReferencia.trim()) { throw new Error(...); }"
+        'if (!nuevaReferencia.trim()) { throw new Error(...); }',
       );
     }
 

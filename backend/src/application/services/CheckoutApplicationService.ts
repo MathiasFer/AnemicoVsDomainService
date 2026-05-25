@@ -48,9 +48,7 @@ export class CheckoutApplicationService {
       detail: string;
     }> = [];
 
-    // ==========================================
-    // 0. RECUPERAR USUARIO DE PERSISTENCIA
-    // ==========================================
+    /// 0. Recuperar usuario desde el repositorio en memoria
     const usuario = await this.usuarioRepository.obtenerPorId(usuarioId);
     if (!usuario) {
       throw new DomainException(
@@ -59,13 +57,11 @@ export class CheckoutApplicationService {
         'procesarCompra',
         'DOMAIN_SERVICE',
         `La capa de aplicación intentó recuperar de la base de datos el usuario con ID ${usuarioId}, pero no existe en los registros del sistema.`,
-        'const usuario = await this.usuarioRepository.obtenerPorId(usuarioId);'
+        'const usuario = await this.usuarioRepository.obtenerPorId(usuarioId);',
       );
     }
 
-    // ==========================================
-    // 1. INSTANCIACIÓN DE DIRECCIÓN Y PAGO (VALUE OBJECTS)
-    // ==========================================
+    /// 1. Instanciar value objects de Direccion y Pago a partir del request
     const direccion = new Direccion(
       direccionData.pais,
       direccionData.ciudad,
@@ -81,18 +77,17 @@ export class CheckoutApplicationService {
     );
 
     // Si no se envía cupón, inicializamos un cupón inactivo por defecto
-    const cupon = cuponData && cuponData.codigo
-      ? new Cupon(
-          cuponData.codigo,
-          cuponData.porcentajeDescuento,
-          cuponData.activo,
-          cuponData.montoMinimo,
-        )
-      : new Cupon('NINGUNO', 0, false, 0);
+    const cupon =
+      cuponData && cuponData.codigo
+        ? new Cupon(
+            cuponData.codigo,
+            cuponData.porcentajeDescuento,
+            cuponData.activo,
+            cuponData.montoMinimo,
+          )
+        : new Cupon('NINGUNO', 0, false, 0);
 
-    // ==========================================
-    // 2. CREACIÓN DE ORDEN (AGGREGATE ROOT)
-    // ==========================================
+    /// 2. Crear la Orden como Aggregate Root con el usuario y la direccion
     const orden = new Orden(
       Date.now(), // ID dinámico de Orden
       usuario,
@@ -100,9 +95,7 @@ export class CheckoutApplicationService {
       pago.obtenerMoneda(),
     );
 
-    // ==========================================
-    // 3. CARGAR PRODUCTOS Y DESCONTAR STOCK (ENTITY BEHAVIOR)
-    // ==========================================
+    /// 3. Cargar productos reales y ejecutar el comportamiento de la entidad (descontarStock)
     const productosModificados: Producto[] = [];
 
     for (const item of productosRequest) {
@@ -114,7 +107,7 @@ export class CheckoutApplicationService {
           'procesarCompra',
           'DOMAIN_SERVICE',
           `No se pudo cargar el producto solicitado. ID buscado: ${item.id}.`,
-          'const producto = await this.productoRepository.obtenerPorId(item.id);'
+          'const producto = await this.productoRepository.obtenerPorId(item.id);',
         );
       }
 
@@ -134,9 +127,7 @@ export class CheckoutApplicationService {
       detail: `Se recuperaron los productos reales. Se ejecutó 'Producto.descontarStock()' protegiendo el inventario e 'Orden.agregarProducto()' en estado PENDIENTE.`,
     });
 
-    // ==========================================
-    // 4. CALCULAR SUBTOTAL (ENTITY BEHAVIOR)
-    // ==========================================
+    /// 4. Calcular el subtotal delegando en el comportamiento de la entidad Orden
     const subtotal = orden.calcularSubtotal();
     trace.push({
       step: 2,
@@ -146,9 +137,7 @@ export class CheckoutApplicationService {
       detail: `La entidad Orden calculó su subtotal sumando el precio interno de sus productos asociados: $${subtotal.toFixed(2)} USD.`,
     });
 
-    // ==========================================
-    // 5. CALCULAR DESCUENTOS (DOMAIN SERVICE)
-    // ==========================================
+    /// 5. Calcular descuentos VIP y cupon delegando en el Domain Service
     const descuento = this.calculadorDescuentoService.calcularDescuento(
       usuario,
       cupon,
@@ -162,9 +151,7 @@ export class CheckoutApplicationService {
       detail: `El Servicio de Dominio estimó un descuento de $${descuento.toFixed(2)} USD (VIP: ${usuario.esUsuarioVip() ? '10%' : '0%'} + Cupón '${cupon.obtenerCodigo()}': ${cupon.estaActivo() ? cupon.obtenerPorcentajeDescuento() + '%' : '0%'}).`,
     });
 
-    // ==========================================
-    // 6. CALCULAR COSTO DE ENVÍO (DOMAIN SERVICE)
-    // ==========================================
+    /// 6. Calcular el costo de envio delegando en el Domain Service
     const costoEnvio = this.calculadorEnvioService.calcularCostoEnvio(
       orden,
       direccion,
@@ -178,9 +165,7 @@ export class CheckoutApplicationService {
       detail: `El Servicio de Dominio calculó el envío en $${costoEnvio.toFixed(2)} USD evaluando el peso total (${orden.calcularPesoTotal()} kg), prioridad y destino (${direccion.obtenerPais()}).`,
     });
 
-    // ==========================================
-    // 7. VALIDAR POLÍTICAS DE FRAUDE (DOMAIN SERVICE)
-    // ==========================================
+    /// 7. Validar politicas de fraude delegando en el Domain Service
     this.validadorFraudeService.validarCompra(
       usuario,
       pago, // Pasa el pago para validar límites
@@ -194,14 +179,10 @@ export class CheckoutApplicationService {
       detail: `El Servicio de Dominio aprobó la transacción tras evaluar que el usuario no está en lista negra (Riesgo: ${usuario.obtenerNivelRiesgo()}%) y cumple los límites de importe.`,
     });
 
-    // ==========================================
-    // 8. CALCULO DEL TOTAL ANTES DE CONVERSIÓN
-    // ==========================================
+    /// 8. Calcular el total en USD antes de aplicar la conversion de moneda
     const totalAntesConversion = subtotal - descuento + costoEnvio;
 
-    // ==========================================
-    // 9. CONVERSIÓN DE MONEDA (DOMAIN SERVICE)
-    // ==========================================
+    /// 9. Convertir el total a la moneda preferida del usuario via Domain Service
     const totalFinal = await this.conversorMonedaService.convertir(
       totalAntesConversion,
       'USD',
@@ -215,19 +196,14 @@ export class CheckoutApplicationService {
       detail: `El Servicio de Dominio convirtió el total de $${totalAntesConversion.toFixed(2)} USD a divisa local (${pago.obtenerMoneda()}) usando el tipo de cambio offline provisto. Total: $${totalFinal.toFixed(2)} ${pago.obtenerMoneda()}.`,
     });
 
-    // ==========================================
-    // 10. PROCESAR PAGO (DOMAIN SERVICE)
-    // ==========================================
+    /// 10. Procesar el pago ajustado al total final via Domain Service
     const pagoAjustado = new Pago(
       pago.obtenerMetodo(),
       totalFinal,
       pago.obtenerMoneda(),
     );
 
-    this.procesadorPagoService.procesarPago(
-      usuario,
-      pagoAjustado,
-    );
+    this.procesadorPagoService.procesarPago(usuario, pagoAjustado);
     trace.push({
       step: 7,
       type: 'DOMAIN_SERVICE',
@@ -236,21 +212,18 @@ export class CheckoutApplicationService {
       detail: `El Servicio de Dominio coordinó el pago: debitó de la entidad Usuario y aprobó la entidad Pago. Nuevo saldo usuario: $${usuario.obtenerSaldo().toFixed(2)} ${pago.obtenerMoneda()}.`,
     });
 
-    // ==========================================
-    // 11. FINALIZAR ORDEN (ENTITY BEHAVIOR)
-    // ==========================================
+    /// 11. Finalizar la Orden delegando el cambio de estado al Aggregate Root
     orden.finalizarOrden();
     trace.push({
       step: 8,
       type: 'ENTITY',
       source: 'Orden',
       method: 'finalizarOrden',
-      detail: 'El Aggregate Root Orden finalizó la compra exitosamente marcando su estado como FINALIZADA.',
+      detail:
+        'El Aggregate Root Orden finalizó la compra exitosamente marcando su estado como FINALIZADA.',
     });
 
-    // ==========================================
-    // 12. PERSISTENCIA DE CAMBIOS (INFRASTRUCTURE ADAPTERS)
-    // ==========================================
+    /// 12. Persistir los cambios en los repositorios en memoria
     await this.usuarioRepository.guardar(usuario);
     for (const prod of productosModificados) {
       await this.productoRepository.guardar(prod);

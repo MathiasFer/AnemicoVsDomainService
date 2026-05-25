@@ -1,7 +1,6 @@
 import { DomainException } from '../exceptions/DomainException';
 
 export class Pago {
-
   private estado: string = 'PENDIENTE';
 
   constructor(
@@ -12,9 +11,7 @@ export class Pago {
     this.validarMonto();
   }
 
-  // =========================
-  // GETTERS
-  // =========================
+  /// GETTERS
 
   obtenerMetodo(): string {
     return this.metodo;
@@ -32,9 +29,7 @@ export class Pago {
     return this.estado;
   }
 
-  // =========================
-  // COMPORTAMIENTO DEL DOMINIO
-  // =========================
+  /// COMPORTAMIENTO DEL DOMINIO
 
   private validarMonto(): void {
     if (this.monto <= 0) {
@@ -44,7 +39,7 @@ export class Pago {
         'validarMonto',
         'ENTITY',
         'La entidad Pago exige montos estrictamente positivos para garantizar que no existan facturas o transacciones vacías o negativas.',
-        'if (this.monto <= 0) { throw new Error(...); }'
+        'if (this.monto <= 0) { throw new Error(...); }',
       );
     }
   }
@@ -57,7 +52,7 @@ export class Pago {
         'aprobarPago',
         'ENTITY',
         'Protección contra doble cargo. Un pago en estado APROBADO no puede re-procesarse ni aprobarse de nuevo.',
-        "if (this.estado === 'APROBADO') { throw new Error(...); }"
+        "if (this.estado === 'APROBADO') { throw new Error(...); }",
       );
     }
 
@@ -68,7 +63,7 @@ export class Pago {
         'aprobarPago',
         'ENTITY',
         'Un pago fallido o RECHAZADO no puede pasar a estado APROBADO; debe iniciarse una nueva transacción de pago.',
-        "if (this.estado === 'RECHAZADO') { throw new Error(...); }"
+        "if (this.estado === 'RECHAZADO') { throw new Error(...); }",
       );
     }
 
@@ -83,7 +78,7 @@ export class Pago {
         'rechazarPago',
         'ENTITY',
         'Una transacción mercantil aprobada y cobrada no puede reversarse simplemente marcándose como rechazada.',
-        "if (this.estado === 'APROBADO') { throw new Error(...); }"
+        "if (this.estado === 'APROBADO') { throw new Error(...); }",
       );
     }
 
@@ -110,7 +105,7 @@ export class Pago {
         'actualizarMetodoPago',
         'ENTITY',
         'El método de pago (ej. Tarjeta de Crédito, Transferencia) es requerido para fines de auditoría financiera.',
-        "if (!nuevoMetodo.trim()) { throw new Error(...); }"
+        'if (!nuevoMetodo.trim()) { throw new Error(...); }',
       );
     }
 

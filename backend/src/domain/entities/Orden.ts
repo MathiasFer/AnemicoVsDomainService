@@ -4,7 +4,6 @@ import { Direccion } from './Direccion';
 import { DomainException } from '../exceptions/DomainException';
 
 export class Orden {
-
   private productos: Producto[] = [];
   private estado: string = 'PENDIENTE';
 
@@ -43,7 +42,7 @@ export class Orden {
         'agregarProducto',
         'ENTITY',
         'La entidad Orden resguarda sus transiciones de estado. Una vez que la orden sale del estado PENDIENTE, queda congelada para evitar modificaciones inconsistentes.',
-        "if (this.estado !== 'PENDIENTE') { throw new Error(...); }"
+        "if (this.estado !== 'PENDIENTE') { throw new Error(...); }",
       );
     }
 
@@ -61,10 +60,7 @@ export class Orden {
   calcularTotalImpuestos(): number {
     let impuestos = 0;
     for (const producto of this.productos) {
-      impuestos += (
-        producto.obtenerPrecio() *
-        producto.obtenerImpuesto()
-      );
+      impuestos += producto.obtenerPrecio() * producto.obtenerImpuesto();
     }
     return impuestos;
   }
@@ -85,7 +81,7 @@ export class Orden {
         'finalizarOrden',
         'ENTITY',
         'La entidad Orden (Aggregate Root) no permite finalizar compras sin productos asociados, garantizando que no existan facturas en cero.',
-        'if (this.productos.length === 0) { throw new Error(...); }'
+        'if (this.productos.length === 0) { throw new Error(...); }',
       );
     }
 
@@ -100,7 +96,7 @@ export class Orden {
         'cancelarOrden',
         'ENTITY',
         'Las órdenes en estado FINALIZADA representan transacciones comerciales ya cerradas e irreversibles en el dominio.',
-        "if (this.estado === 'FINALIZADA') { throw new Error(...); }"
+        "if (this.estado === 'FINALIZADA') { throw new Error(...); }",
       );
     }
 

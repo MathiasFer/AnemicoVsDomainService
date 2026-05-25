@@ -4,18 +4,16 @@ import { DomainException } from '../exceptions/DomainException';
 
 @Injectable()
 export class ConversorMonedaService {
-
   constructor(
     @Inject('IProveedorCambioMoneda')
-    private proveedorCambio: IProveedorCambioMoneda
+    private proveedorCambio: IProveedorCambioMoneda,
   ) {}
 
   async convertir(
     monto: number,
     monedaOrigen: string,
-    monedaDestino: string
+    monedaDestino: string,
   ): Promise<number> {
-
     if (monto <= 0) {
       throw new DomainException(
         'El monto debe ser mayor a cero',
@@ -23,17 +21,18 @@ export class ConversorMonedaService {
         'convertir',
         'DOMAIN_SERVICE',
         'La conversión de divisas requiere valores positivos para operar.',
-        'if (monto <= 0) { throw new Error(...); }'
+        'if (monto <= 0) { throw new Error(...); }',
       );
     }
 
+    // Si la moneda de origen y destino son iguales no se requiere conversion
     if (monedaOrigen === monedaDestino) {
       return monto;
     }
 
     const tasaCambio = await this.proveedorCambio.obtenerTasaCambio(
       monedaOrigen,
-      monedaDestino
+      monedaDestino,
     );
 
     return monto * tasaCambio;

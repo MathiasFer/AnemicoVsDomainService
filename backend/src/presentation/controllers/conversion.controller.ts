@@ -10,7 +10,6 @@ import { DomainException } from '../../domain/exceptions/DomainException';
 
 @Controller('conversion')
 export class ConversionController {
-
   constructor(
     private readonly conversorMonedaService: ConversorMonedaService,
   ) {}
@@ -29,7 +28,7 @@ export class ConversionController {
           'convertir',
           'VALUE_OBJECT',
           'La capa de presentación valida la sanidad de los parámetros del Query String.',
-          'if (!monto || isNaN(monto)) { throw new Error(...); }'
+          'if (!monto || isNaN(monto)) { throw new Error(...); }',
         );
       }
 
@@ -46,7 +45,6 @@ export class ConversionController {
         monedaDestino: destino,
         resultado,
       };
-
     } catch (error) {
       if (error instanceof DomainException) {
         throw new HttpException(

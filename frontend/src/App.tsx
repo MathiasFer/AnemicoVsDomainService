@@ -38,17 +38,17 @@ const API_SYSTEM_RESET = 'http://localhost:3000/system/reset';
 
 // Monedas y métodos de pago permitidos en el backend
 const METODOS_PAGO = [
-  { value: 'TARJETA', label: '💳 Tarjeta de Crédito/Débito' },
-  { value: 'TRANSFERENCIA', label: '🏦 Transferencia Bancaria' },
-  { value: 'PAYPAL', label: '📱 PayPal Express' },
+  { value: 'TARJETA', label: 'Tarjeta de Crédito/Débito' },
+  { value: 'TRANSFERENCIA', label: 'Transferencia Bancaria' },
+  { value: 'PAYPAL', label: 'PayPal Express' },
 ] as const;
 
 const MONEDAS = [
-  { value: 'USD', label: '💵 USD — Dólar' },
-  { value: 'EUR', label: '💶 EUR — Euro' },
-  { value: 'COP', label: '🇨🇴 COP — Peso Colombiano' },
-  { value: 'MXN', label: '🇲🇽 MXN — Peso Mexicano' },
-  { value: 'CLP', label: '🇨🇱 CLP — Peso Chileno' },
+  { value: 'USD', label: 'USD — Dólar' },
+  { value: 'EUR', label: 'EUR — Euro' },
+  { value: 'COP', label: 'COP — Peso Colombiano' },
+  { value: 'MXN', label: 'MXN — Peso Mexicano' },
+  { value: 'CLP', label: 'CLP — Peso Chileno' },
 ] as const;
 
 // Tasas de cambio fijas que el backend simula de forma offline en ExchangeRateApiProvider
@@ -74,23 +74,23 @@ function formatMoney(value: number, moneda: string): string {
 
 // Avatares visuales para la estética Netflix
 const AVATARES: Record<number, string> = {
-  1: '👨‍💻', // Juan
-  2: '👑', // Maria VIP
-  3: '💸', // Carlos Sin Saldo
-  4: '🕵️', // Pedro Alto Riesgo
+  1: '', // Juan
+  2: '', // Maria VIP
+  3: '', // Carlos Sin Saldo
+  4: '', // Pedro Alto Riesgo
 };
 
 export default function App() {
-  // --- ESTADOS DE NAVEGACIÓN ---
+  /// ESTADOS DE NAVEGACIÓN
   // SELECT_USER (Netflix) | PROFILE (Edición) | TIENDA (Compra)
   const [view, setView] = useState<'SELECT_USER' | 'PROFILE' | 'TIENDA'>('SELECT_USER');
   
-  // --- ESTADOS DE DATOS DINÁMICOS DESDE EL BACKEND ---
+  /// ESTADOS DE DATOS DINÁMICOS DESDE EL BACKEND
   const [usuarios, setUsuarios] = useState<CheckoutUsuarioPayload[]>([]);
   const [productos, setProductos] = useState<ProductoPayload[]>([]);
   const [activeUserId, setActiveUserId] = useState<number | null>(null);
 
-  // --- ESTADOS DE FORMULARIO DE COMPRA ---
+  /// ESTADOS DE FORMULARIO DE COMPRA
   const [direccion, setDireccion] = useState({
     pais: PAIS_LOCAL_REF,
     ciudad: 'Quito',
@@ -116,14 +116,14 @@ export default function App() {
     103: 0,
   });
 
-  // --- ESTADOS DE EDICIÓN DE PERFIL EN PANTALLA 2 ---
+  /// ESTADOS DE EDICIÓN DE PERFIL EN PANTALLA 2
   const [editSaldo, setEditSaldo] = useState<number>(0);
   const [editVip, setEditVip] = useState<boolean>(false);
   const [editRiesgo, setEditRiesgo] = useState<number>(0);
   const [profileSaving, setProfileSaving] = useState<boolean>(false);
   const [profileSaveSuccess, setProfileSaveSuccess] = useState<boolean>(false);
 
-  // --- ESTADOS DE CARGA Y RESPUESTAS DEL BACKEND ---
+  /// ESTADOS DE CARGA Y RESPUESTAS DEL BACKEND
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<CheckoutSuccessResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -411,7 +411,7 @@ export default function App() {
               >
                 {/* Avatar Cyberpunk */}
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-slate-900 border border-slate-800 text-5xl transition group-hover:scale-105 group-hover:border-indigo-500/30 group-hover:bg-indigo-950/40">
-                  {AVATARES[u.id] || '👤'}
+                  {AVATARES[u.id] || ''}
                 </div>
 
                 <h3 className="mt-5 text-base font-bold text-white group-hover:text-indigo-400 transition">
@@ -554,7 +554,7 @@ export default function App() {
                     className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                   />
                   <span className="text-[9px] text-slate-500 block">
-                    {editRiesgo > 80 ? '⚠️ Al superar el 80%, el Validador de Fraude bloqueará la compra.' : '✅ Cumple política de fraude estándar.'}
+                    {editRiesgo > 80 ? 'Al superar el 80%, el Validador de Fraude bloqueará la compra.' : 'Cumple política de fraude estándar.'}
                   </span>
                 </div>
 
@@ -582,7 +582,7 @@ export default function App() {
 
               {profileSaveSuccess && (
                 <span className="text-xs text-emerald-400 font-bold flex items-center gap-1 animate-pulse">
-                  ✓ Configuración persistida con éxito en el backend.
+                  Configuración persistida con éxito en el backend.
                 </span>
               )}
 
@@ -693,7 +693,7 @@ export default function App() {
                             <div className="flex justify-between">
                               <dt>Stock Backend</dt>
                               <dd className={`font-semibold ${p.stock === 0 ? 'text-red-400 font-bold' : 'text-slate-200'}`}>
-                                {p.stock === 0 ? '🚫 Agotado' : `${p.stock} uds`}
+                                {p.stock === 0 ? 'Agotado' : `${p.stock} uds`}
                               </dd>
                             </div>
                             <div className="flex justify-between">
@@ -1035,7 +1035,7 @@ export default function App() {
                   <div className="flex items-center gap-2 bg-red-950/50 px-4 py-2 text-red-400 border-b border-red-900/40">
                     <Terminal className="h-4 w-4 text-red-500" />
                     <span className="font-mono text-[9px] font-bold tracking-wider uppercase">
-                      ⚠️ EXCEPCIÓN DE DOMINIO CAPTURADA
+                      EXCEPCIÓN DE DOMINIO CAPTURADA
                     </span>
                   </div>
                   
@@ -1087,7 +1087,7 @@ export default function App() {
                   <div className="flex items-center gap-2 bg-emerald-950/50 px-4 py-2.5 text-emerald-400 border-b border-emerald-900/40">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     <span className="font-mono text-[9px] font-bold tracking-wider uppercase">
-                      🚀 COMPRA COMPLETADA CORRECTAMENTE
+                      COMPRA COMPLETADA CORRECTAMENTE
                     </span>
                   </div>
                   

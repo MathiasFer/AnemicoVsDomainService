@@ -5,4 +5,3 @@ export interface IUsuarioRepository {
   obtenerPorId(id: number): Promise<Usuario | null>;
   guardar(usuario: Usuario): Promise<void>;
 }
-

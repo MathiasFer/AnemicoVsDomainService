@@ -5,30 +5,28 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CalculadorEnvioService {
-
   calcularCostoEnvio(
     orden: Orden,
     direccion: Direccion,
-    prioridad: boolean
+    prioridad: boolean,
   ): number {
-
     let costoEnvio = 5;
 
-    // PESO TOTAL
+    // Cargo base por peso total del pedido
     const pesoTotal = orden.calcularPesoTotal();
     costoEnvio += pesoTotal * 0.5;
 
-    // ENVÍO INTERNACIONAL
+    // Recargo por envio fuera del pais de referencia
     if (direccion.esInternacional('Ecuador')) {
       costoEnvio += 15;
     }
 
-    // PRIORIDAD
+    // Recargo adicional por envio prioritario
     if (prioridad) {
       costoEnvio += 10;
     }
 
-    // PRODUCTOS RESTRINGIDOS
+    // Validacion de restricciones de envio por producto
     for (const producto of orden.obtenerProductos()) {
       if (!producto.puedeSerEnviado()) {
         throw new DomainException(
@@ -37,7 +35,7 @@ export class CalculadorEnvioService {
           'calcularCostoEnvio',
           'DOMAIN_SERVICE',
           `Restricción logística global: El producto '${producto.nombre}' contiene componentes clasificados como peligrosos o restringidos (ej. baterías de litio, químicos), impidiendo su despacho fuera de almacén.`,
-          'if (!producto.puedeSerEnviado()) { throw new Error(...); }'
+          'if (!producto.puedeSerEnviado()) { throw new Error(...); }',
         );
       }
     }

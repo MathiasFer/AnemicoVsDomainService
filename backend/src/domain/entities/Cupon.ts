@@ -1,7 +1,6 @@
 import { DomainException } from '../exceptions/DomainException';
 
 export class Cupon {
-
   constructor(
     private codigo: string,
     private porcentajeDescuento: number,
@@ -11,9 +10,7 @@ export class Cupon {
     this.validarPorcentaje();
   }
 
-  // =========================
-  // GETTERS
-  // =========================
+  /// GETTERS
 
   obtenerCodigo(): string {
     return this.codigo;
@@ -31,9 +28,7 @@ export class Cupon {
     return this.activo;
   }
 
-  // =========================
-  // COMPORTAMIENTO DEL DOMINIO
-  // =========================
+  /// COMPORTAMIENTO DEL DOMINIO
 
   private validarPorcentaje(): void {
     if (this.porcentajeDescuento < 0 || this.porcentajeDescuento > 100) {
@@ -43,7 +38,7 @@ export class Cupon {
         'validarPorcentaje',
         'ENTITY',
         'El cupón de descuento debe aplicar un beneficio porcentual que se encuentre estrictamente entre el 0% y el 100%.',
-        'if (this.porcentajeDescuento < 0 || this.porcentajeDescuento > 100) { throw new Error(...); }'
+        'if (this.porcentajeDescuento < 0 || this.porcentajeDescuento > 100) { throw new Error(...); }',
       );
     }
   }
@@ -63,7 +58,7 @@ export class Cupon {
         'calcularDescuento',
         'ENTITY',
         `El cupón '${this.codigo}' requiere un total mínimo de compra de $${this.montoMinimo} USD. El total de compra actual es de $${totalCompra} USD.`,
-        'if (!this.puedeAplicarse(totalCompra)) { throw new Error("El cupón no puede aplicarse"); }'
+        'if (!this.puedeAplicarse(totalCompra)) { throw new Error("El cupón no puede aplicarse"); }',
       );
     }
 
