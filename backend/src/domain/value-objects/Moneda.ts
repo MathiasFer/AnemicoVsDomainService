@@ -1,8 +1,7 @@
 import { DomainException } from '../exceptions/DomainException';
 
 /**
- * Value Object: Moneda.
- * Define una divisa y su capacidad de conversión.
+ * VO Moneda: Lógica de divisa inmutable.
  */
 export class Moneda {
   constructor(
@@ -10,23 +9,8 @@ export class Moneda {
     public readonly simbolo: string,
     public readonly tasaCambio: number,
   ) {
-    this.validarTasaCambio();
+    if (this.tasaCambio <= 0) throw new DomainException('Tasa inválida', 'Moneda', 'constructor', 'VALUE_OBJECT', 'Tasa debe ser > 0.', '');
   }
 
-  private validarTasaCambio(): void {
-    if (this.tasaCambio <= 0) {
-      throw new DomainException(
-        'La tasa de cambio debe ser positiva',
-        'Moneda',
-        'constructor',
-        'VALUE_OBJECT',
-        'No se pueden realizar conversiones con tasas nulas o negativas.',
-        'if (this.tasaCambio <= 0) { throw new Error(...); }',
-      );
-    }
-  }
-
-  public convertir(monto: number): number {
-    return monto * this.tasaCambio;
-  }
+  public convertir(monto: number): number { return monto * this.tasaCambio; }
 }

@@ -1,8 +1,7 @@
 import { DomainException } from '../exceptions/DomainException';
 
 /**
- * Entidad Producto.
- * Representa un artículo del catálogo con su stock disponible.
+ * Entidad Producto: Maneja stock e información comercial.
  */
 export class Producto {
   constructor(
@@ -19,74 +18,23 @@ export class Producto {
   }
 
   private validarInvariantes(): void {
-    if (this.precio < 0) {
-      throw new DomainException(
-        'El precio no puede ser negativo',
-        'Producto',
-        'constructor',
-        'ENTITY',
-        'Un producto debe tener un valor comercial positivo o nulo.',
-        'if (this.precio < 0) { throw new Error(...); }',
-      );
-    }
-    if (this.stock < 0) {
-      throw new DomainException(
-        'El stock no puede ser negativo',
-        'Producto',
-        'constructor',
-        'ENTITY',
-        'El inventario no puede representar cantidades negativas de productos físicos.',
-        'if (this.stock < 0) { throw new Error(...); }',
-      );
-    }
+    if (this.precio < 0) throw new DomainException('Precio inválido', 'Producto', 'constructor', 'ENTITY', 'Valor comercial >= 0.', '');
+    if (this.stock < 0) throw new DomainException('Stock inválido', 'Producto', 'constructor', 'ENTITY', 'Inventario >= 0.', '');
   }
 
-  // GETTERS
-
-  obtenerPrecio(): number {
-    return this.precio;
-  }
-
-  obtenerStock(): number {
-    return this.stock;
-  }
-
-  obtenerPeso(): number {
-    return this.peso;
-  }
-
-  obtenerCategoria(): string {
-    return this.categoria;
-  }
-
-  obtenerImpuesto(): number {
-    return this.impuesto;
-  }
-
-  tieneEnvioRestringido(): boolean {
-    return this.envioRestringido;
-  }
-
-  // COMPORTAMIENTO DEL DOMINIO
+  obtenerPrecio(): number { return this.precio; }
+  obtenerStock(): number { return this.stock; }
+  obtenerPeso(): number { return this.peso; }
+  obtenerCategoria(): string { return this.categoria; }
+  obtenerImpuesto(): number { return this.impuesto; }
+  tieneEnvioRestringido(): boolean { return this.envioRestringido; }
 
   validarDisponibilidad(cantidad: number): void {
-    if (this.stock < cantidad) {
-      throw new DomainException(
-        `Stock insuficiente para el producto ${this.nombre}`,
-        'Producto',
-        'validarDisponibilidad',
-        'ENTITY',
-        `Disponibilidad: ${this.stock}, Solicitado: ${cantidad}.`,
-        'if (this.stock < cantidad) { throw new Error(...); }',
-      );
-    }
+    if (this.stock < cantidad) throw new DomainException(`Stock insuficiente: ${this.nombre}`, 'Producto', 'validarDisponibilidad', 'ENTITY', `Disponible: ${this.stock}.`, '');
   }
 
-  /**
-   * Modifica el estado interno protegiendo la invariante de stock.
-   */
   descontarStock(cantidad: number): void {
-    if (cantidad <= 0) return; // Opcional: lanzar error si se prefiere
+    if (cantidad <= 0) return;
     this.validarDisponibilidad(cantidad);
     this.stock -= cantidad;
   }

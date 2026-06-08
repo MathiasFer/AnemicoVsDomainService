@@ -1,9 +1,7 @@
 import { DomainException } from '../exceptions/DomainException';
 
 /**
- * Value Object que representa un producto dentro de una orden.
- * Almacena un "snapshot" del estado del producto en el momento de la compra
- * para garantizar la integridad histórica de la orden (ej. si el precio cambia después).
+ * VO OrdenItem: Snapshot de producto en orden.
  */
 export class OrdenItem {
   constructor(
@@ -15,31 +13,10 @@ export class OrdenItem {
     public readonly pesoUnitario: number,
     public readonly envioRestringido: boolean,
   ) {
-    this.validarCantidad();
+    if (this.cantidad <= 0) throw new DomainException('Cantidad inválida', 'OrdenItem', 'constructor', 'VALUE_OBJECT', 'Requiere cantidad > 0.', '');
   }
 
-  private validarCantidad(): void {
-    if (this.cantidad <= 0) {
-      throw new DomainException(
-        'La cantidad debe ser mayor a cero',
-        'OrdenItem',
-        'constructor',
-        'VALUE_OBJECT',
-        'Un ítem de orden representa una intención de compra física, por lo que requiere una cantidad positiva.',
-        'if (this.cantidad <= 0) { throw new Error(...); }',
-      );
-    }
-  }
-
-  public calcularSubtotal(): number {
-    return this.precioUnitario * this.cantidad;
-  }
-
-  public calcularImpuestos(): number {
-    return (this.precioUnitario * this.impuestoUnitario) * this.cantidad;
-  }
-
-  public calcularPesoTotal(): number {
-    return this.pesoUnitario * this.cantidad;
-  }
+  public calcularSubtotal(): number { return this.precioUnitario * this.cantidad; }
+  public calcularImpuestos(): number { return (this.precioUnitario * this.impuestoUnitario) * this.cantidad; }
+  public calcularPesoTotal(): number { return this.pesoUnitario * this.cantidad; }
 }

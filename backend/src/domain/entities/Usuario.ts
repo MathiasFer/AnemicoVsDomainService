@@ -1,8 +1,7 @@
 import { DomainException } from '../exceptions/DomainException';
 
 /**
- * Entidad Usuario.
- * Protege sus invariantes de saldo, riesgo y datos personales.
+ * Entidad Usuario: Protege invariantes de saldo y riesgo.
  */
 export class Usuario {
   private historialCompras: number[] = [];
@@ -26,7 +25,7 @@ export class Usuario {
         'Usuario',
         'constructor',
         'ENTITY',
-        'Toda entidad Usuario requiere un nombre legal o comercial para su identificación en el sistema.',
+        'Nombre obligatorio para identificación.',
         'if (!this.nombre.trim()) { throw new Error(...); }',
       );
     }
@@ -36,7 +35,7 @@ export class Usuario {
         'Usuario',
         'constructor',
         'ENTITY',
-        'El correo electrónico es el canal de comunicación y notificación principal del dominio.',
+        'Email requerido para notificaciones.',
         'if (!this.email.includes("@")) { throw new Error(...); }',
       );
     }
@@ -46,7 +45,7 @@ export class Usuario {
         'Usuario',
         'constructor',
         'ENTITY',
-        'El saldo representa fondos reales depositados; el dominio no permite cuentas en descubierto en este contexto.',
+        'No se permiten cuentas en descubierto.',
         'if (this.saldo < 0) { throw new Error(...); }',
       );
     }
@@ -56,96 +55,34 @@ export class Usuario {
         'Usuario',
         'constructor',
         'ENTITY',
-        'El riesgo se mide en una escala porcentual para ser procesado por el Validador de Fraude.',
+        'Escala porcentual de riesgo.',
         'if (this.nivelRiesgo < 0 || this.nivelRiesgo > 100) { throw new Error(...); }',
       );
     }
   }
 
-  // COMPORTAMIENTO DEL DOMINIO
-
-  obtenerSaldo(): number {
-    return this.saldo;
-  }
-
-  esUsuarioVip(): boolean {
-    return this.esVip;
-  }
-
-  obtenerMonedaPreferida(): string {
-    return this.monedaPreferida;
-  }
-
-  obtenerNivelRiesgo(): number {
-    return this.nivelRiesgo;
-  }
+  obtenerSaldo(): number { return this.saldo; }
+  esUsuarioVip(): boolean { return this.esVip; }
+  obtenerMonedaPreferida(): string { return this.monedaPreferida; }
+  obtenerNivelRiesgo(): number { return this.nivelRiesgo; }
 
   retirarSaldo(monto: number): void {
-    if (monto <= 0) {
-      throw new DomainException(
-        'El monto a retirar debe ser mayor a cero',
-        'Usuario',
-        'retirarSaldo',
-        'ENTITY',
-        'El retiro de fondos debe representar una cantidad positiva de dinero.',
-        'if (monto <= 0) { throw new Error(...); }',
-      );
-    }
-
-    if (this.saldo < monto) {
-      throw new DomainException(
-        'Saldo insuficiente',
-        'Usuario',
-        'retirarSaldo',
-        'ENTITY',
-        `Protección de integridad financiera: Saldo actual: $${this.saldo}, Solicitado: $${monto}.`,
-        'if (this.saldo < monto) { throw new Error("Saldo insuficiente"); }',
-      );
-    }
-
+    if (monto <= 0) throw new DomainException('Monto inválido', 'Usuario', 'retirarSaldo', 'ENTITY', 'Monto debe ser positivo.', '');
+    if (this.saldo < monto) throw new DomainException('Saldo insuficiente', 'Usuario', 'retirarSaldo', 'ENTITY', 'Protección financiera.', '');
     this.saldo -= monto;
   }
 
   agregarSaldo(monto: number): void {
-    if (monto <= 0) {
-      throw new DomainException(
-        'El depósito debe ser positivo',
-        'Usuario',
-        'agregarSaldo',
-        'ENTITY',
-        'No se pueden realizar abonos negativos o nulos a la cuenta del usuario.',
-        'if (monto <= 0) { throw new Error(...); }',
-      );
-    }
-
+    if (monto <= 0) throw new DomainException('Depósito inválido', 'Usuario', 'agregarSaldo', 'ENTITY', 'Abono debe ser positivo.', '');
     this.saldo += monto;
   }
 
   actualizarMonedaPreferida(moneda: string): void {
-    if (!moneda || moneda.length !== 3) {
-      throw new DomainException(
-        'Código de moneda inválido (ISO 4217)',
-        'Usuario',
-        'actualizarMonedaPreferida',
-        'ENTITY',
-        'El sistema requiere un código de moneda estándar de 3 caracteres.',
-        'if (!moneda || moneda.length !== 3) { throw new Error(...); }',
-      );
-    }
+    if (!moneda || moneda.length !== 3) throw new DomainException('Código moneda inválido', 'Usuario', 'actualizarMonedaPreferida', 'ENTITY', 'ISO 4217 requerido.', '');
     this.monedaPreferida = moneda.toUpperCase();
   }
 
-  establecerSaldo(saldo: number): void {
-    if (saldo < 0) throw new Error('Saldo negativo no permitido');
-    this.saldo = saldo;
-  }
-
-  establecerEstadoVip(esVip: boolean): void {
-    this.esVip = esVip;
-  }
-
-  actualizarNivelRiesgo(nivelRiesgo: number): void {
-    if (nivelRiesgo < 0 || nivelRiesgo > 100) throw new Error('Riesgo fuera de rango');
-    this.nivelRiesgo = nivelRiesgo;
-  }
+  establecerSaldo(saldo: number): void { this.saldo = saldo; }
+  establecerEstadoVip(esVip: boolean): void { this.esVip = esVip; }
+  actualizarNivelRiesgo(nivelRiesgo: number): void { this.nivelRiesgo = nivelRiesgo; }
 }
