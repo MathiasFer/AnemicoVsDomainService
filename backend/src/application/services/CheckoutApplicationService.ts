@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Usuario } from '../../domain/entities/Usuario';
 import { Producto } from '../../domain/entities/Producto';
-import { Direccion } from '../../domain/entities/Direccion';
-import { Pago } from '../../domain/entities/Pago';
-import { Cupon } from '../../domain/entities/Cupon';
 import { Orden } from '../../domain/entities/Orden';
+
+import { Direccion } from '../../domain/value-objects/Direccion';
+import { Pago } from '../../domain/value-objects/Pago';
+import { Cupon } from '../../domain/value-objects/Cupon';
+import { OrdenItem } from '../../domain/value-objects/OrdenItem';
 
 import { ConversorMonedaService } from '../../domain/services/ConversorMonedaService';
 import { CalculadorDescuentoService } from '../../domain/services/CalculadorDescuentoService';
@@ -31,7 +33,7 @@ export class CheckoutApplicationService {
     private calculadorEnvioService: CalculadorEnvioService,
     private validadorFraudeService: ValidadorFraudeService,
     private procesadorPagoService: ProcesadorPagoService,
-  ) {}
+  ) { }
 
   async procesarCompra(
     usuarioId: number,
@@ -42,26 +44,19 @@ export class CheckoutApplicationService {
   ) {
     const trace: Array<{
       step: number;
-      type: 'ENTITY' | 'DOMAIN_SERVICE';
+      type: 'ENTITY' | 'DOMAIN_SERVICE' | 'VALUE_OBJECT';
       source: string;
       method: string;
       detail: string;
     }> = [];
 
-    /// 0. Recuperar usuario desde el repositorio en memoria
+    /// 0. Recuperar usuario
     const usuario = await this.usuarioRepository.obtenerPorId(usuarioId);
     if (!usuario) {
-      throw new DomainException(
-        'Usuario no encontrado',
-        'CheckoutApplicationService',
-        'procesarCompra',
-        'DOMAIN_SERVICE',
-        `La capa de aplicación intentó recuperar de la base de datos el usuario con ID ${usuarioId}, pero no existe en los registros del sistema.`,
-        'const usuario = await this.usuarioRepository.obtenerPorId(usuarioId);',
-      );
+      throw new DomainException('Usuario no encontrado', 'CheckoutApplicationService', 'procesarCompra', 'DOMAIN_SERVICE', `ID: ${usuarioId}`, '');
     }
 
-    /// 1. Instanciar value objects de Direccion y Pago a partir del request
+    /// 1. Instanciar Value Objects (Inmutables)
     const direccion = new Direccion(
       direccionData.pais,
       direccionData.ciudad,
@@ -70,184 +65,83 @@ export class CheckoutApplicationService {
       direccionData.referencia || '',
     );
 
-    const pago = new Pago(
-      pagoData.metodo,
-      1, // Monto temporal que se ajustará al total final de la compra
-      pagoData.moneda,
-    );
+    const cupon = cuponData && cuponData.codigo
+      ? new Cupon(cuponData.codigo, cuponData.porcentajeDescuento, cuponData.activo, cuponData.montoMinimo)
+      : new Cupon('NINGUNO', 0, false, 0);
 
-    // Si no se envía cupón, inicializamos un cupón inactivo por defecto
-    const cupon =
-      cuponData && cuponData.codigo
-        ? new Cupon(
-            cuponData.codigo,
-            cuponData.porcentajeDescuento,
-            cuponData.activo,
-            cuponData.montoMinimo,
-          )
-        : new Cupon('NINGUNO', 0, false, 0);
+    /// 2. Crear la Orden (Aggregate Root)
+    const orden = new Orden(Date.now(), usuario, direccion, pagoData.moneda);
 
-    /// 2. Crear la Orden como Aggregate Root con el usuario y la direccion
-    const orden = new Orden(
-      Date.now(), // ID dinámico de Orden
-      usuario,
-      direccion,
-      pago.obtenerMoneda(),
-    );
-
-    /// 3. Cargar productos reales y ejecutar el comportamiento de la entidad (descontarStock)
+    /// 3. Procesar Productos y generar OrdenItems (Snapshots)
     const productosModificados: Producto[] = [];
-
     for (const item of productosRequest) {
       const producto = await this.productoRepository.obtenerPorId(item.id);
-      if (!producto) {
-        throw new DomainException(
-          `Producto con ID ${item.id} no encontrado`,
-          'CheckoutApplicationService',
-          'procesarCompra',
-          'DOMAIN_SERVICE',
-          `No se pudo cargar el producto solicitado. ID buscado: ${item.id}.`,
-          'const producto = await this.productoRepository.obtenerPorId(item.id);',
-        );
-      }
+      if (!producto) throw new DomainException(`Producto ${item.id} no encontrado`, 'CheckoutApplicationService', 'procesarCompra', 'DOMAIN_SERVICE', '', '');
 
-      // Validar y descontar stock dentro de la propia Entidad Producto (Modelo Rico)
+      // El Producto (Modelo Rico) protege su propio stock
       producto.descontarStock(item.cantidad);
 
-      // Agregar a la orden
-      orden.agregarProducto(producto);
+      // Snapshot inmutable para la orden
+      const ordenItem = new OrdenItem(
+        producto.id,
+        producto.nombre,
+        producto.obtenerPrecio(),
+        item.cantidad,
+        producto.obtenerImpuesto(),
+        producto.obtenerPeso(),
+        producto.tieneEnvioRestringido(),
+      );
+
+      orden.agregarItem(ordenItem);
       productosModificados.push(producto);
     }
 
-    trace.push({
-      step: 1,
-      type: 'ENTITY',
-      source: 'Orden',
-      method: 'agregarProducto',
-      detail: `Se recuperaron los productos reales. Se ejecutó 'Producto.descontarStock()' protegiendo el inventario e 'Orden.agregarProducto()' en estado PENDIENTE.`,
-    });
+    trace.push({ step: 1, type: 'VALUE_OBJECT', source: 'OrdenItem', method: 'constructor', detail: 'Snapshots creados.' });
+    trace.push({ step: 2, type: 'ENTITY', source: 'Orden', method: 'agregarItem', detail: 'Items agregados al Agregado.' });
 
-    /// 4. Calcular el subtotal delegando en el comportamiento de la entidad Orden
+    /// 4. Calcular Subtotal
     const subtotal = orden.calcularSubtotal();
-    trace.push({
-      step: 2,
-      type: 'ENTITY',
-      source: 'Orden',
-      method: 'calcularSubtotal',
-      detail: `La entidad Orden calculó su subtotal sumando el precio interno de sus productos asociados: $${subtotal.toFixed(2)} USD.`,
-    });
+    trace.push({ step: 3, type: 'ENTITY', source: 'Orden', method: 'calcularSubtotal', detail: `Subtotal: $${subtotal} USD.` });
 
-    /// 5. Calcular descuentos VIP y cupon delegando en el Domain Service
-    const descuento = this.calculadorDescuentoService.calcularDescuento(
-      usuario,
-      cupon,
-      subtotal,
-    );
-    trace.push({
-      step: 3,
-      type: 'DOMAIN_SERVICE',
-      source: 'CalculadorDescuentoService',
-      method: 'calcularDescuento',
-      detail: `El Servicio de Dominio estimó un descuento de $${descuento.toFixed(2)} USD (VIP: ${usuario.esUsuarioVip() ? '10%' : '0%'} + Cupón '${cupon.obtenerCodigo()}': ${cupon.estaActivo() ? cupon.obtenerPorcentajeDescuento() + '%' : '0%'}).`,
-    });
+    /// 5. Descuentos (Domain Service)
+    const montoDescuento = this.calculadorDescuentoService.calcularDescuento(usuario, cupon, subtotal);
+    orden.aplicarDescuento(montoDescuento);
+    trace.push({ step: 4, type: 'DOMAIN_SERVICE', source: 'CalculadorDescuentoService', method: 'calcularDescuento', detail: `Descuento: $${montoDescuento} USD.` });
 
-    /// 6. Calcular el costo de envio delegando en el Domain Service
-    const costoEnvio = this.calculadorEnvioService.calcularCostoEnvio(
-      orden,
-      direccion,
-      true, // Prioridad
-    );
-    trace.push({
-      step: 4,
-      type: 'DOMAIN_SERVICE',
-      source: 'CalculadorEnvioService',
-      method: 'calcularCostoEnvio',
-      detail: `El Servicio de Dominio calculó el envío en $${costoEnvio.toFixed(2)} USD evaluando el peso total (${orden.calcularPesoTotal()} kg), prioridad y destino (${direccion.obtenerPais()}).`,
-    });
+    /// 6. Envío (Domain Service)
+    const costoEnvio = this.calculadorEnvioService.calcularCostoEnvio(orden, direccion, true);
+    orden.establecerCostoEnvio(costoEnvio);
+    trace.push({ step: 5, type: 'DOMAIN_SERVICE', source: 'CalculadorEnvioService', method: 'calcularCostoEnvio', detail: `Envío: $${costoEnvio} USD.` });
 
-    /// 7. Validar politicas de fraude delegando en el Domain Service
-    this.validadorFraudeService.validarCompra(
-      usuario,
-      pago, // Pasa el pago para validar límites
-      direccion,
-    );
-    trace.push({
-      step: 5,
-      type: 'DOMAIN_SERVICE',
-      source: 'ValidadorFraudeService',
-      method: 'validarCompra',
-      detail: `El Servicio de Dominio aprobó la transacción tras evaluar que el usuario no está en lista negra (Riesgo: ${usuario.obtenerNivelRiesgo()}%) y cumple los límites de importe.`,
-    });
+    /// 7. Validación de Fraude
+    const totalVentaUsd = orden.calcularTotal();
+    const pagoPreliminar = new Pago(pagoData.metodo, totalVentaUsd, 'USD');
+    this.validadorFraudeService.validarCompra(usuario, pagoPreliminar, direccion);
+    trace.push({ step: 6, type: 'DOMAIN_SERVICE', source: 'ValidadorFraudeService', method: 'validarCompra', detail: 'Fraude validado.' });
 
-    /// 8. Calcular el total en USD antes de aplicar la conversion de moneda
-    const totalAntesConversion = subtotal - descuento + costoEnvio;
+    /// 8. Conversión de Moneda
+    const totalFinalMoneda = await this.conversorMonedaService.convertir(totalVentaUsd, 'USD', pagoData.moneda);
+    trace.push({ step: 7, type: 'DOMAIN_SERVICE', source: 'ConversorMonedaService', method: 'convertir', detail: `Total en ${pagoData.moneda}: ${totalFinalMoneda}.` });
 
-    /// 9. Convertir el total a la moneda preferida del usuario via Domain Service
-    const totalFinal = await this.conversorMonedaService.convertir(
-      totalAntesConversion,
-      'USD',
-      pago.obtenerMoneda(),
-    );
-    trace.push({
-      step: 6,
-      type: 'DOMAIN_SERVICE',
-      source: 'ConversorMonedaService',
-      method: 'convertir',
-      detail: `El Servicio de Dominio convirtió el total de $${totalAntesConversion.toFixed(2)} USD a divisa local (${pago.obtenerMoneda()}) usando el tipo de cambio offline provisto. Total: $${totalFinal.toFixed(2)} ${pago.obtenerMoneda()}.`,
-    });
+    /// 9. Procesamiento de Pago
+    const pagoAProcesar = new Pago(pagoData.metodo, totalFinalMoneda, pagoData.moneda);
+    const pagoResultado = this.procesadorPagoService.procesarPago(usuario, pagoAProcesar);
+    trace.push({ step: 8, type: 'DOMAIN_SERVICE', source: 'ProcesadorPagoService', method: 'procesarPago', detail: `Pago ${pagoResultado.estado}.` });
 
-    /// 10. Procesar el pago ajustado al total final via Domain Service
-    const pagoAjustado = new Pago(
-      pago.obtenerMetodo(),
-      totalFinal,
-      pago.obtenerMoneda(),
-    );
-
-    this.procesadorPagoService.procesarPago(usuario, pagoAjustado);
-    trace.push({
-      step: 7,
-      type: 'DOMAIN_SERVICE',
-      source: 'ProcesadorPagoService',
-      method: 'procesarPago',
-      detail: `El Servicio de Dominio coordinó el pago: debitó de la entidad Usuario y aprobó la entidad Pago. Nuevo saldo usuario: $${usuario.obtenerSaldo().toFixed(2)} ${pago.obtenerMoneda()}.`,
-    });
-
-    /// 11. Finalizar la Orden delegando el cambio de estado al Aggregate Root
+    /// 10. Finalizar Orden
     orden.finalizarOrden();
-    trace.push({
-      step: 8,
-      type: 'ENTITY',
-      source: 'Orden',
-      method: 'finalizarOrden',
-      detail:
-        'El Aggregate Root Orden finalizó la compra exitosamente marcando su estado como FINALIZADA.',
-    });
+    trace.push({ step: 9, type: 'ENTITY', source: 'Orden', method: 'finalizarOrden', detail: 'Orden Finalizada.' });
 
-    /// 12. Persistir los cambios en los repositorios en memoria
+    /// 11. Persistencia
     await this.usuarioRepository.guardar(usuario);
-    for (const prod of productosModificados) {
-      await this.productoRepository.guardar(prod);
-    }
+    for (const prod of productosModificados) await this.productoRepository.guardar(prod);
 
     return {
       success: true,
       mensaje: 'Compra procesada correctamente',
-      resumenCompra: {
-        subtotal,
-        descuento,
-        costoEnvio,
-        totalFinal,
-        moneda: pago.obtenerMoneda(),
-      },
-      pago: {
-        estado: pagoAjustado.obtenerEstado(),
-        metodo: pagoAjustado.obtenerMetodo(),
-      },
-      cliente: {
-        nombre: usuario.nombre,
-        saldoRestante: usuario.obtenerSaldo(),
-        esVip: usuario.esUsuarioVip(),
-      },
+      resumenCompra: { subtotal, descuento: montoDescuento, costoEnvio, totalFinal: totalFinalMoneda, moneda: pagoData.moneda },
+      pago: { estado: pagoResultado.estado, metodo: pagoResultado.metodo },
+      cliente: { nombre: usuario.nombre, saldoRestante: usuario.obtenerSaldo(), esVip: usuario.esUsuarioVip() },
       pedagogicalTrace: trace,
     };
   }

@@ -20,10 +20,10 @@ export class ExchangeRateApiProvider implements IProveedorCambioMoneda {
     // Tasas de cambio mockeadas contra USD
     const tasasContraUSD: { [key: string]: number } = {
       USD: 1.0,
-      EUR: 0.92, // 1 USD = 0.92 EUR
-      MXN: 17.5, // 1 USD = 17.5 MXN
-      COP: 4000, // 1 USD = 4000 COP
-      CLP: 900, // 1 USD = 900 CLP
+      EUR: 0.92,
+      MXN: 17.5,
+      COP: 4000,
+      CLP: 900,
     };
 
     if (origen === 'USD' && tasasContraUSD[destino]) {

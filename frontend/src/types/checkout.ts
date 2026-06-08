@@ -46,7 +46,7 @@ export interface CheckoutBody {
 
 export interface PedagogicalStep {
   step: number;
-  type: 'ENTITY' | 'DOMAIN_SERVICE';
+  type: 'ENTITY' | 'DOMAIN_SERVICE' | 'VALUE_OBJECT';
   source: string;
   method: string;
   detail: string;

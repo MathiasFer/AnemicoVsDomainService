@@ -1,12 +1,17 @@
 import { DomainException } from '../exceptions/DomainException';
 
+/**
+ * Value Object: Dirección.
+ * Representa una ubicación física de entrega.
+ * Es INMUTABLE: cualquier cambio genera una nueva instancia.
+ */
 export class Direccion {
   constructor(
-    private pais: string,
-    private ciudad: string,
-    private calle: string,
-    private codigoPostal: string,
-    private referencia: string,
+    private readonly pais: string,
+    private readonly ciudad: string,
+    private readonly calle: string,
+    private readonly codigoPostal: string,
+    private readonly referencia: string,
   ) {
     this.validarCamposObligatorios();
   }
@@ -33,7 +38,7 @@ export class Direccion {
     return this.referencia;
   }
 
-  /// COMPORTAMIENTO DEL DOMINIO
+  /// COMPORTAMIENTO DEL DOMINIO (INMUTABLE)
 
   private validarCamposObligatorios(): void {
     if (!this.pais.trim()) {
@@ -81,19 +86,28 @@ export class Direccion {
     }
   }
 
-  actualizarReferencia(nuevaReferencia: string): void {
+  /**
+   * En lugar de mutar, retornamos una nueva instancia.
+   */
+  cambiarReferencia(nuevaReferencia: string): Direccion {
     if (!nuevaReferencia.trim()) {
       throw new DomainException(
         'La referencia no puede estar vacía',
         'Direccion',
-        'actualizarReferencia',
+        'cambiarReferencia',
         'VALUE_OBJECT',
         'La referencia de la dirección debe contener indicaciones reales de despacho para el transportista.',
         'if (!nuevaReferencia.trim()) { throw new Error(...); }',
       );
     }
 
-    this.referencia = nuevaReferencia;
+    return new Direccion(
+      this.pais,
+      this.ciudad,
+      this.calle,
+      this.codigoPostal,
+      nuevaReferencia,
+    );
   }
 
   perteneceAPais(pais: string): boolean {

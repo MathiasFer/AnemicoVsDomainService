@@ -74,10 +74,10 @@ function formatMoney(value: number, moneda: string): string {
 
 // Avatares visuales para la estética Netflix
 const AVATARES: Record<number, string> = {
-  1: '', // Juan
-  2: '', // Maria VIP
-  3: '', // Carlos Sin Saldo
-  4: '', // Pedro Alto Riesgo
+  1: '👨', // Juan
+  2: '👩', // Maria VIP
+  3: '🧔', // Carlos Sin Saldo
+  4: '🤵', // Pedro Alto Riesgo
 };
 
 export default function App() {
@@ -128,15 +128,21 @@ export default function App() {
   const [success, setSuccess] = useState<CheckoutSuccessResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorTrace, setErrorTrace] = useState<PedagogicalErrorTrace | null>(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Cargar usuarios y productos de backend
   const fetchData = async () => {
+    setIsInitialLoading(true);
+    setError(null);
     try {
       const resUsr = await fetch(API_SYSTEM_USUARIOS);
       if (resUsr.ok) {
         const dataUsr = await resUsr.json();
         setUsuarios(dataUsr);
+      } else {
+        setError(`Backend respondió con error: ${resUsr.status}`);
       }
+      
       const resProd = await fetch(API_SYSTEM_PRODUCTOS);
       if (resProd.ok) {
         const dataProd = await resProd.json();
@@ -144,6 +150,9 @@ export default function App() {
       }
     } catch (e) {
       console.error('Error al sincronizar con el backend', e);
+      setError('No se pudo conectar con http://localhost:3000. Verifica que el backend esté encendido.');
+    } finally {
+      setIsInitialLoading(false);
     }
   };
 
@@ -400,6 +409,18 @@ export default function App() {
           </p>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {usuarios.length === 0 && (
+              <div className="col-span-full py-10 rounded-3xl border border-dashed border-slate-800 bg-slate-900/10 text-slate-500">
+                <p>No se pudieron cargar los perfiles desde el backend.</p>
+                <p className="text-[10px] mt-2">Asegúrate de que el servidor NestJS esté corriendo en http://localhost:3000</p>
+                <button 
+                  onClick={fetchData}
+                  className="mt-4 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 rounded-xl text-xs transition"
+                >
+                  Reintentar Conexión
+                </button>
+              </div>
+            )}
             {usuarios.map((u) => (
               <div
                 key={u.id}

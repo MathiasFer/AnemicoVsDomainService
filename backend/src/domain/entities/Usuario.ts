@@ -1,5 +1,9 @@
 import { DomainException } from '../exceptions/DomainException';
 
+/**
+ * Entidad Usuario.
+ * Protege sus invariantes de saldo, riesgo y datos personales.
+ */
 export class Usuario {
   private historialCompras: number[] = [];
 
@@ -11,7 +15,52 @@ export class Usuario {
     private esVip: boolean,
     private nivelRiesgo: number,
     private monedaPreferida: string,
-  ) {}
+  ) {
+    this.validarInvariantes();
+  }
+
+  private validarInvariantes(): void {
+    if (!this.nombre.trim()) {
+      throw new DomainException(
+        'El nombre del usuario no puede estar vacío',
+        'Usuario',
+        'constructor',
+        'ENTITY',
+        'Toda entidad Usuario requiere un nombre legal o comercial para su identificación en el sistema.',
+        'if (!this.nombre.trim()) { throw new Error(...); }',
+      );
+    }
+    if (!this.email.includes('@')) {
+      throw new DomainException(
+        'El formato del email es inválido',
+        'Usuario',
+        'constructor',
+        'ENTITY',
+        'El correo electrónico es el canal de comunicación y notificación principal del dominio.',
+        'if (!this.email.includes("@")) { throw new Error(...); }',
+      );
+    }
+    if (this.saldo < 0) {
+      throw new DomainException(
+        'El saldo inicial no puede ser negativo',
+        'Usuario',
+        'constructor',
+        'ENTITY',
+        'El saldo representa fondos reales depositados; el dominio no permite cuentas en descubierto en este contexto.',
+        'if (this.saldo < 0) { throw new Error(...); }',
+      );
+    }
+    if (this.nivelRiesgo < 0 || this.nivelRiesgo > 100) {
+      throw new DomainException(
+        'El nivel de riesgo debe estar entre 0 y 100',
+        'Usuario',
+        'constructor',
+        'ENTITY',
+        'El riesgo se mide en una escala porcentual para ser procesado por el Validador de Fraude.',
+        'if (this.nivelRiesgo < 0 || this.nivelRiesgo > 100) { throw new Error(...); }',
+      );
+    }
+  }
 
   // COMPORTAMIENTO DEL DOMINIO
 
@@ -34,11 +83,11 @@ export class Usuario {
   retirarSaldo(monto: number): void {
     if (monto <= 0) {
       throw new DomainException(
-        'El monto debe ser mayor a cero',
+        'El monto a retirar debe ser mayor a cero',
         'Usuario',
         'retirarSaldo',
         'ENTITY',
-        'El monto a retirar de la cuenta del usuario debe ser un valor positivo.',
+        'El retiro de fondos debe representar una cantidad positiva de dinero.',
         'if (monto <= 0) { throw new Error(...); }',
       );
     }
@@ -49,7 +98,7 @@ export class Usuario {
         'Usuario',
         'retirarSaldo',
         'ENTITY',
-        `La entidad Usuario protege su integridad financiera e impide retiros por encima del saldo disponible. Saldo actual: $${this.saldo} USD, Monto solicitado: $${monto} USD.`,
+        `Protección de integridad financiera: Saldo actual: $${this.saldo}, Solicitado: $${monto}.`,
         'if (this.saldo < monto) { throw new Error("Saldo insuficiente"); }',
       );
     }
@@ -60,11 +109,11 @@ export class Usuario {
   agregarSaldo(monto: number): void {
     if (monto <= 0) {
       throw new DomainException(
-        'El monto debe ser positivo',
+        'El depósito debe ser positivo',
         'Usuario',
         'agregarSaldo',
         'ENTITY',
-        'El depósito de saldo debe ser estrictamente positivo.',
+        'No se pueden realizar abonos negativos o nulos a la cuenta del usuario.',
         'if (monto <= 0) { throw new Error(...); }',
       );
     }
@@ -72,30 +121,22 @@ export class Usuario {
     this.saldo += monto;
   }
 
-  registrarCompra(ordenId: number): void {
-    this.historialCompras.push(ordenId);
-  }
-
   actualizarMonedaPreferida(moneda: string): void {
-    if (!moneda) {
+    if (!moneda || moneda.length !== 3) {
       throw new DomainException(
-        'La moneda es obligatoria',
+        'Código de moneda inválido (ISO 4217)',
         'Usuario',
         'actualizarMonedaPreferida',
         'ENTITY',
-        'El usuario debe tener una moneda preferida válida asignada.',
-        'if (!moneda) { throw new Error(...); }',
+        'El sistema requiere un código de moneda estándar de 3 caracteres.',
+        'if (!moneda || moneda.length !== 3) { throw new Error(...); }',
       );
     }
-
-    this.monedaPreferida = moneda;
-  }
-
-  esUsuarioConfiable(): boolean {
-    return this.nivelRiesgo < 70;
+    this.monedaPreferida = moneda.toUpperCase();
   }
 
   establecerSaldo(saldo: number): void {
+    if (saldo < 0) throw new Error('Saldo negativo no permitido');
     this.saldo = saldo;
   }
 
@@ -104,6 +145,7 @@ export class Usuario {
   }
 
   actualizarNivelRiesgo(nivelRiesgo: number): void {
+    if (nivelRiesgo < 0 || nivelRiesgo > 100) throw new Error('Riesgo fuera de rango');
     this.nivelRiesgo = nivelRiesgo;
   }
 }
