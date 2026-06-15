@@ -67,9 +67,9 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
     return Array.from(this.usuarios.values()).map(
       (u) =>
         new Usuario(
-          u.id,
-          u.nombre,
-          u.email,
+          u.obtenerId(),
+          u.obtenerNombre(),
+          u.obtenerEmail(),
           u.obtenerSaldo(),
           u.esUsuarioVip(),
           u.obtenerNivelRiesgo(),
@@ -83,9 +83,9 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
     const u = this.usuarios.get(Number(id));
     if (!u) return null;
     return new Usuario(
-      u.id,
-      u.nombre,
-      u.email,
+      u.obtenerId(),
+      u.obtenerNombre(),
+      u.obtenerEmail(),
       u.obtenerSaldo(),
       u.esUsuarioVip(),
       u.obtenerNivelRiesgo(),
@@ -95,6 +95,6 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
 
   async guardar(usuario: Usuario): Promise<void> {
     await Promise.resolve();
-    this.usuarios.set(usuario.id, usuario);
+    this.usuarios.set(usuario.obtenerId(), usuario);
   }
 }

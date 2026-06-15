@@ -7,9 +7,9 @@ export class Usuario {
   private historialCompras: number[] = [];
 
   constructor(
-    public id: number,
-    public nombre: string,
-    public email: string,
+    private readonly id: number,
+    private nombre: string,
+    private readonly email: string,
     private saldo: number,
     private esVip: boolean,
     private nivelRiesgo: number,
@@ -61,28 +61,96 @@ export class Usuario {
     }
   }
 
-  obtenerSaldo(): number { return this.saldo; }
-  esUsuarioVip(): boolean { return this.esVip; }
-  obtenerMonedaPreferida(): string { return this.monedaPreferida; }
-  obtenerNivelRiesgo(): number { return this.nivelRiesgo; }
+  obtenerId(): number {
+    return this.id;
+  }
+  obtenerNombre(): string {
+    return this.nombre;
+  }
+  obtenerEmail(): string {
+    return this.email;
+  }
+  obtenerSaldo(): number {
+    return this.saldo;
+  }
+  esUsuarioVip(): boolean {
+    return this.esVip;
+  }
+  obtenerMonedaPreferida(): string {
+    return this.monedaPreferida;
+  }
+  obtenerNivelRiesgo(): number {
+    return this.nivelRiesgo;
+  }
 
   retirarSaldo(monto: number): void {
-    if (monto <= 0) throw new DomainException('Monto inválido', 'Usuario', 'retirarSaldo', 'ENTITY', 'Monto debe ser positivo.', '');
-    if (this.saldo < monto) throw new DomainException('Saldo insuficiente', 'Usuario', 'retirarSaldo', 'ENTITY', 'Protección financiera.', '');
+    if (monto <= 0)
+      throw new DomainException(
+        'Monto inválido',
+        'Usuario',
+        'retirarSaldo',
+        'ENTITY',
+        'Monto debe ser positivo.',
+        '',
+      );
+    if (this.saldo < monto)
+      throw new DomainException(
+        'Saldo insuficiente',
+        'Usuario',
+        'retirarSaldo',
+        'ENTITY',
+        'Protección financiera.',
+        '',
+      );
     this.saldo -= monto;
   }
 
   agregarSaldo(monto: number): void {
-    if (monto <= 0) throw new DomainException('Depósito inválido', 'Usuario', 'agregarSaldo', 'ENTITY', 'Abono debe ser positivo.', '');
+    if (monto <= 0)
+      throw new DomainException(
+        'Depósito inválido',
+        'Usuario',
+        'agregarSaldo',
+        'ENTITY',
+        'Abono debe ser positivo.',
+        '',
+      );
     this.saldo += monto;
   }
 
   actualizarMonedaPreferida(moneda: string): void {
-    if (!moneda || moneda.length !== 3) throw new DomainException('Código moneda inválido', 'Usuario', 'actualizarMonedaPreferida', 'ENTITY', 'ISO 4217 requerido.', '');
+    if (!moneda || moneda.length !== 3)
+      throw new DomainException(
+        'Código moneda inválido',
+        'Usuario',
+        'actualizarMonedaPreferida',
+        'ENTITY',
+        'ISO 4217 requerido.',
+        '',
+      );
     this.monedaPreferida = moneda.toUpperCase();
   }
 
-  establecerSaldo(saldo: number): void { this.saldo = saldo; }
-  establecerEstadoVip(esVip: boolean): void { this.esVip = esVip; }
-  actualizarNivelRiesgo(nivelRiesgo: number): void { this.nivelRiesgo = nivelRiesgo; }
+  actualizarNombre(nombre: string): void {
+    if (!nombre.trim())
+      throw new DomainException(
+        'Nombre inválido',
+        'Usuario',
+        'actualizarNombre',
+        'ENTITY',
+        'Nombre no puede estar vacío.',
+        '',
+      );
+    this.nombre = nombre;
+  }
+
+  establecerSaldo(saldo: number): void {
+    this.saldo = saldo;
+  }
+  establecerEstadoVip(esVip: boolean): void {
+    this.esVip = esVip;
+  }
+  actualizarNivelRiesgo(nivelRiesgo: number): void {
+    this.nivelRiesgo = nivelRiesgo;
+  }
 }

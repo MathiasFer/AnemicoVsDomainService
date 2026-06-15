@@ -47,8 +47,8 @@ export class InMemoryProductoRepository implements IProductoRepository {
     return Array.from(this.productos.values()).map(
       (p) =>
         new Producto(
-          p.id,
-          p.nombre,
+          p.obtenerId(),
+          p.obtenerNombre(),
           p.obtenerPrecio(),
           p.obtenerStock(),
           p.obtenerPeso(),
@@ -64,8 +64,8 @@ export class InMemoryProductoRepository implements IProductoRepository {
     const p = this.productos.get(Number(id));
     if (!p) return null;
     return new Producto(
-      p.id,
-      p.nombre,
+      p.obtenerId(),
+      p.obtenerNombre(),
       p.obtenerPrecio(),
       p.obtenerStock(),
       p.obtenerPeso(),
@@ -77,6 +77,6 @@ export class InMemoryProductoRepository implements IProductoRepository {
 
   async guardar(producto: Producto): Promise<void> {
     await Promise.resolve();
-    this.productos.set(producto.id, producto);
+    this.productos.set(producto.obtenerId(), producto);
   }
 }

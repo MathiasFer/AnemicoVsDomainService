@@ -13,10 +13,24 @@ export class OrdenItem {
     public readonly pesoUnitario: number,
     public readonly envioRestringido: boolean,
   ) {
-    if (this.cantidad <= 0) throw new DomainException('Cantidad inválida', 'OrdenItem', 'constructor', 'VALUE_OBJECT', 'Requiere cantidad > 0.', '');
+    if (this.cantidad <= 0)
+      throw new DomainException(
+        'Cantidad inválida',
+        'OrdenItem',
+        'constructor',
+        'VALUE_OBJECT',
+        'Requiere cantidad > 0.',
+        '',
+      );
   }
 
-  public calcularSubtotal(): number { return this.precioUnitario * this.cantidad; }
-  public calcularImpuestos(): number { return (this.precioUnitario * this.impuestoUnitario) * this.cantidad; }
-  public calcularPesoTotal(): number { return this.pesoUnitario * this.cantidad; }
+  public calcularSubtotal(): number {
+    return this.precioUnitario * this.cantidad;
+  }
+  public calcularImpuestos(): number {
+    return this.precioUnitario * this.impuestoUnitario * this.cantidad;
+  }
+  public calcularPesoTotal(): number {
+    return this.pesoUnitario * this.cantidad;
+  }
 }

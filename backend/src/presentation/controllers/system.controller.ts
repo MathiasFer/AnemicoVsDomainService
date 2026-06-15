@@ -24,9 +24,9 @@ export class SystemController {
   async getUsuarios() {
     const list = await this.usuarioRepository.obtenerTodos();
     return list.map((u) => ({
-      id: u.id,
-      nombre: u.nombre,
-      email: u.email,
+      id: u.obtenerId(),
+      nombre: u.obtenerNombre(),
+      email: u.obtenerEmail(),
       saldo: u.obtenerSaldo(),
       esVip: u.esUsuarioVip(),
       nivelRiesgo: u.obtenerNivelRiesgo(),
@@ -38,8 +38,8 @@ export class SystemController {
   async getProductos() {
     const list = await this.productoRepository.obtenerTodos();
     return list.map((p) => ({
-      id: p.id,
-      nombre: p.nombre,
+      id: p.obtenerId(),
+      nombre: p.obtenerNombre(),
       precio: p.obtenerPrecio(),
       stock: p.obtenerStock(),
       peso: p.obtenerPeso(),
@@ -66,7 +66,7 @@ export class SystemController {
       return { success: false, message: 'Usuario no encontrado' };
     }
 
-    if (body.nombre !== undefined) u.nombre = body.nombre;
+    if (body.nombre !== undefined) u.actualizarNombre(body.nombre);
     if (body.saldo !== undefined) u.establecerSaldo(Number(body.saldo));
     if (body.esVip !== undefined) u.establecerEstadoVip(Boolean(body.esVip));
     if (body.nivelRiesgo !== undefined)
@@ -78,9 +78,9 @@ export class SystemController {
     return {
       success: true,
       usuario: {
-        id: u.id,
-        nombre: u.nombre,
-        email: u.email,
+        id: u.obtenerId(),
+        nombre: u.obtenerNombre(),
+        email: u.obtenerEmail(),
         saldo: u.obtenerSaldo(),
         esVip: u.esUsuarioVip(),
         nivelRiesgo: u.obtenerNivelRiesgo(),

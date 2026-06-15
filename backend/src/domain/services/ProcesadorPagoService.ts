@@ -34,7 +34,7 @@ export class ProcesadorPagoService {
 
     // El Usuario protege su saldo (Rich Model)
     usuario.retirarSaldo(pago.monto);
-    
+
     // El Pago retorna una nueva instancia aprobada (VO Inmutable)
     return pago.aprobar();
   }

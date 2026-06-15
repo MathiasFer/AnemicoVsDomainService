@@ -11,7 +11,6 @@ export class CalculadorDescuentoService {
       descuento += subtotal * 0.1;
     }
 
-
     if (cupon.puedeAplicarse(subtotal)) {
       descuento += cupon.calcularDescuento(subtotal);
     }
