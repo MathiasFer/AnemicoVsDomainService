@@ -1,9 +1,4 @@
 export class Producto {
-    // MODELO ANÉMICO: Ilusión de encapsulamiento (Anti-patrón).
-    // Las propiedades son privadas, pero tienen getters y setters "ciegos".
-    // El setter de stock permite modificar el valor sin ninguna regla de negocio,
-    // dejando el control y la responsabilidad al servicio externo.
-    
     private id: number;
     private nombre: string;
     private precio: number;

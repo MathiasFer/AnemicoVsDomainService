@@ -46,7 +46,6 @@ export class CheckoutApplicationService {
     return total;
   }
   
-  // MODELO ANÉMICO: Lógica de cálculo de flete filtrada en la capa de aplicación
   calcularCostoEnvioPorPeso(productos: Producto[], envio: Envio, subtotal: number): number {
     let pesoTotal = 0;
     for (const producto of productos) {
@@ -55,7 +54,7 @@ export class CheckoutApplicationService {
     
     let costoEnvio = envio.costo;
     if (pesoTotal > 10) {
-      costoEnvio += 15; // Recargo por sobrepeso
+      costoEnvio += 15;
     }
     
     return subtotal + costoEnvio;
@@ -83,7 +82,6 @@ export class CheckoutApplicationService {
     }
   }
 
-  // MODELO ANÉMICO: Lógica comercial (cálculo de descuento) filtrada en la Capa de Aplicación.
   aplicarDescuentoVip(usuario: Usuario, total: number): number {
     if (usuario.getEsVip()) {
       total = total * 0.9;
@@ -92,7 +90,6 @@ export class CheckoutApplicationService {
     return total;
   }
 
-  // MODELO ANÉMICO: Lógica condicional de promociones mezclada con el caso de uso
   aplicarCuponDescuento(cupon: Cupon, total: number): number {
     if (cupon && cupon.activo) {
       const descuento = total * (cupon.porcentajeDescuento / 100);
@@ -101,7 +98,6 @@ export class CheckoutApplicationService {
     return total;
   }
 
-  // MODELO ANÉMICO: Validación externa de invariantes (debería validarse dentro de la entidad Producto).
   validarStock(productos: Producto[]): void {
     for (const producto of productos) {
       if (producto.getStock() <= 0) {
@@ -110,14 +106,12 @@ export class CheckoutApplicationService {
     }
   }
 
-  // MODELO ANÉMICO: Mutación directa externa usando setters que rompen el encapsulamiento del stock.
   descontarStock(productos: Producto[]): void {
     for (const producto of productos) {
       producto.setStock(producto.getStock() - 1);
     }
   }
 
-  // MODELO ANÉMICO: Modificación de atributos del Usuario desde afuera mediante setters sin validación.
   validarYDescontarSaldo(usuario: Usuario, total: number): void {
     if (usuario.getSaldo() < total) {
       throw new Error('Saldo insuficiente');
@@ -126,7 +120,6 @@ export class CheckoutApplicationService {
     usuario.setSaldo(usuario.getSaldo() - total);
   }
   
-  // MODELO ANÉMICO: Modificando directamente los puntos de fidelidad mediante setters.
   acumularPuntosFidelidad(usuario: Usuario, total: number): void {
     if (total > 100) {
       usuario.setPuntosFidelidad(usuario.getPuntosFidelidad() + 10);

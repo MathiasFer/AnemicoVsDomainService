@@ -1,8 +1,4 @@
 export class Usuario {
-    // MODELO ANÉMICO: Ilusión de encapsulamiento (Anti-patrón).
-    // El setter de saldo permite modificar el saldo desde afuera, sin verificar
-    // si el monto es negativo o si rompe alguna regla financiera interna.
-    
     private id: number;
     private nombre: string;
     private saldo: number;
