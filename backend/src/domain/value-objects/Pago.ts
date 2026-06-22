@@ -6,9 +6,6 @@ export enum EstadoPago {
   RECHAZADO = 'RECHAZADO',
 }
 
-/**
- * VO Pago: Representación inmutable de transacción.
- */
 export class Pago {
   constructor(
     public readonly metodo: string,

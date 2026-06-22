@@ -1,8 +1,5 @@
 import { DomainException } from '../exceptions/DomainException';
 
-/**
- * VO Direccion: Ubicación de entrega (Inmutable).
- */
 export class Direccion {
   constructor(
     private readonly pais: string,

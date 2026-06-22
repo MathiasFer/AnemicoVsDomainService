@@ -3,9 +3,6 @@ import { Direccion } from '../value-objects/Direccion';
 import { OrdenItem } from '../value-objects/OrdenItem';
 import { DomainException } from '../exceptions/DomainException';
 
-/**
- * Aggregate Root: Orden. Coordina ítems, totales y estado de compra.
- */
 export class Orden {
   private items: OrdenItem[] = [];
   private estado: string = 'PENDIENTE';

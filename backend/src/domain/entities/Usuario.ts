@@ -1,8 +1,5 @@
 import { DomainException } from '../exceptions/DomainException';
 
-/**
- * Entidad Usuario: Protege invariantes de saldo y riesgo.
- */
 export class Usuario {
   private historialCompras: number[] = [];
 

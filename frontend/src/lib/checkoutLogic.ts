@@ -2,7 +2,6 @@ import type { CheckoutBody, ProductoPayload } from '../types/checkout';
 
 export const PAIS_LOCAL_REF = 'Ecuador';
 
-// Catálogo sincronizado al 100% con los datos precargados en el InMemoryProductoRepository del backend
 export const CATALOGO: ProductoPayload[] = [
   {
     id: 101,
@@ -18,7 +17,7 @@ export const CATALOGO: ProductoPayload[] = [
     id: 102,
     nombre: 'Mouse Óptico',
     precio: 20.0,
-    stock: 0, // Sin stock en base de datos para pruebas didácticas
+    stock: 0,
     peso: 0.1,
     categoria: 'Accesorios',
     impuesto: 0.12,
@@ -32,7 +31,7 @@ export const CATALOGO: ProductoPayload[] = [
     peso: 1.2,
     categoria: 'Energia',
     impuesto: 0.12,
-    envioRestringido: true, // Restringido para provocar error de logística
+    envioRestringido: true,
   },
 ];
 
@@ -64,29 +63,24 @@ export function calcularTotalesUsd(
     }
   }
 
-  // Descuento VIP
   let descuento = 0;
   if (esVip) {
     descuento += subtotal * 0.10;
   }
 
-  // Descuento Cupón
   if (cupon.activo && subtotal >= cupon.montoMinimo) {
     descuento += (subtotal * cupon.porcentajeDescuento) / 100;
   }
 
-  // Costo Envió (Servicio del Dominio)
   let costoEnvio = 0;
   if (subtotal > 0) {
     costoEnvio = 5; // Tarifa base
     costoEnvio += pesoTotal * 0.5; // Por peso
 
-    // Envío internacional
     if (pais.trim().toLowerCase() !== PAIS_LOCAL_REF.toLowerCase()) {
       costoEnvio += 15;
     }
 
-    // Prioridad por defecto
     costoEnvio += 10;
   }
 

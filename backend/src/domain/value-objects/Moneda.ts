@@ -1,8 +1,5 @@
 import { DomainException } from '../exceptions/DomainException';
 
-/**
- * VO Moneda: Lógica de divisa inmutable.
- */
 export class Moneda {
   constructor(
     public readonly codigo: string,

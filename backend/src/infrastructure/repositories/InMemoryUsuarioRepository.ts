@@ -11,12 +11,10 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
   }
 
   private precargarDatos() {
-    // 1. Usuario Normal con saldo
     this.usuarios.set(
       1,
       new Usuario(1, 'Juan Pérez', 'juan@test.com', 1000, false, 10, 'USD'),
     );
-    // 2. Usuario VIP con saldo
     this.usuarios.set(
       2,
       new Usuario(
@@ -29,7 +27,6 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
         'USD',
       ),
     );
-    // 3. Usuario sin saldo (para forzar error de saldo insuficiente)
     this.usuarios.set(
       3,
       new Usuario(
@@ -42,7 +39,6 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
         'USD',
       ),
     );
-    // 4. Usuario Sospechoso (para forzar error de nivel de riesgo en ValidadorFraudeService)
     this.usuarios.set(
       4,
       new Usuario(

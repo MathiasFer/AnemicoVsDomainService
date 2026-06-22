@@ -1,13 +1,13 @@
 export class DomainException extends Error {
   constructor(
     message: string,
-    public readonly source: string, // e.g., 'Usuario', 'Producto', 'ValidadorFraudeService'
-    public readonly method: string, // e.g., 'retirarSaldo', 'descontarStock'
+    public readonly source: string,
+    public readonly method: string,
     public readonly type: 'ENTITY' | 'DOMAIN_SERVICE' | 'VALUE_OBJECT',
-    public readonly explanation: string, // Explicación didáctica sobre el concepto de negocio
-    public readonly codeSnippet: string, // Fragmento de código responsable de la regla
+    public readonly explanation: string,
+    public readonly codeSnippet: string,
   ) {
     super(message);
-    Object.setPrototypeOf(this, new.target.prototype); // Restaurar cadena de prototipos
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }

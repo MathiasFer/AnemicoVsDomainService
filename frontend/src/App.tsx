@@ -36,7 +36,6 @@ const API_SYSTEM_USUARIOS = 'http://localhost:3000/system/usuarios';
 const API_SYSTEM_PRODUCTOS = 'http://localhost:3000/system/productos';
 const API_SYSTEM_RESET = 'http://localhost:3000/system/reset';
 
-// Monedas y métodos de pago permitidos en el backend
 const METODOS_PAGO = [
   { value: 'TARJETA', label: 'Tarjeta de Crédito/Débito' },
   { value: 'TRANSFERENCIA', label: 'Transferencia Bancaria' },
@@ -51,7 +50,6 @@ const MONEDAS = [
   { value: 'CLP', label: 'CLP — Peso Chileno' },
 ] as const;
 
-// Tasas de cambio fijas que el backend simula de forma offline en ExchangeRateApiProvider
 const TASAS_MOCK: Record<string, number> = {
   USD: 1.0,
   EUR: 0.92,
@@ -72,25 +70,20 @@ function formatMoney(value: number, moneda: string): string {
   }
 }
 
-// Avatares visuales para la estética Netflix
 const AVATARES: Record<number, string> = {
-  1: '👨', // Juan
-  2: '👩', // Maria VIP
-  3: '🧔', // Carlos Sin Saldo
-  4: '🤵', // Pedro Alto Riesgo
+  1: '👨',
+  2: '👩',
+  3: '🧔',
+  4: '🤵',
 };
 
 export default function App() {
-  /// ESTADOS DE NAVEGACIÓN
-  // SELECT_USER (Netflix) | PROFILE (Edición) | TIENDA (Compra)
   const [view, setView] = useState<'SELECT_USER' | 'PROFILE' | 'TIENDA'>('SELECT_USER');
   
-  /// ESTADOS DE DATOS DINÁMICOS DESDE EL BACKEND
   const [usuarios, setUsuarios] = useState<CheckoutUsuarioPayload[]>([]);
   const [productos, setProductos] = useState<ProductoPayload[]>([]);
   const [activeUserId, setActiveUserId] = useState<number | null>(null);
 
-  /// ESTADOS DE FORMULARIO DE COMPRA
   const [direccion, setDireccion] = useState({
     pais: PAIS_LOCAL_REF,
     ciudad: 'Quito',
@@ -109,28 +102,24 @@ export default function App() {
     montoMinimo: 100,
   });
 
-  // Cantidades en carrito
   const [cartQty, setCartQty] = useState<Record<number, number>>({
     101: 0,
     102: 0,
     103: 0,
   });
 
-  /// ESTADOS DE EDICIÓN DE PERFIL EN PANTALLA 2
   const [editSaldo, setEditSaldo] = useState<number>(0);
   const [editVip, setEditVip] = useState<boolean>(false);
   const [editRiesgo, setEditRiesgo] = useState<number>(0);
   const [profileSaving, setProfileSaving] = useState<boolean>(false);
   const [profileSaveSuccess, setProfileSaveSuccess] = useState<boolean>(false);
 
-  /// ESTADOS DE CARGA Y RESPUESTAS DEL BACKEND
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<CheckoutSuccessResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorTrace, setErrorTrace] = useState<PedagogicalErrorTrace | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  // Cargar usuarios y productos de backend
   const fetchData = async () => {
     setIsInitialLoading(true);
     setError(null);
@@ -160,12 +149,10 @@ export default function App() {
     fetchData();
   }, []);
 
-  // Obtener objeto de usuario activo actual
   const activeUser = useMemo(() => {
     return usuarios.find(u => u.id === activeUserId) || null;
   }, [usuarios, activeUserId]);
 
-  // Al cambiar el usuario activo, inicializar los campos de edición en pantalla 2
   useEffect(() => {
     if (activeUser) {
       setEditSaldo(activeUser.saldo);
@@ -173,7 +160,6 @@ export default function App() {
       setEditRiesgo(activeUser.nivelRiesgo);
       setProfileSaveSuccess(false);
       
-      // Limpiar carro y trazas anteriores
       setCartQty({
         101: 0,
         102: 0,
@@ -185,18 +171,15 @@ export default function App() {
     }
   }, [activeUserId, activeUser]);
 
-  // Reiniciar la base de datos a su estado original
   const resetDatabase = async () => {
     try {
       const res = await fetch(API_SYSTEM_RESET, { method: 'POST' });
       if (res.ok) {
         await fetchData();
-        // Limpiar estados de checkout
         setError(null);
         setErrorTrace(null);
         setSuccess(null);
         setProfileSaveSuccess(false);
-        // Si hay usuario activo, refrescar campos de edición
         if (activeUser) {
           const freshUsr = usuarios.find(u => u.id === activeUserId);
           if (freshUsr) {
@@ -212,7 +195,6 @@ export default function App() {
     }
   };
 
-  // Guardar datos editados del usuario activo en el backend
   const guardarPerfil = async () => {
     if (!activeUser) return;
     setProfileSaving(true);
@@ -228,7 +210,7 @@ export default function App() {
         }),
       });
       if (res.ok) {
-        await fetchData(); // Refrescar del backend
+        await fetchData();
         setProfileSaveSuccess(true);
         setTimeout(() => setProfileSaveSuccess(false), 3000);
       } else {
@@ -241,7 +223,6 @@ export default function App() {
     }
   };
 
-  // Cálculos matemáticos en el frontend para el ticket interactivo
   const estimacionUsd = useMemo(() => {
     let subtotal = 0;
     let pesoTotal = 0;
@@ -279,13 +260,11 @@ export default function App() {
     return { subtotal, descuento, costoEnvio, total };
   }, [cartQty, activeUser, cupon, direccion.pais, productos]);
 
-  // Valor convertido en base a la tasa de cambio simulada
   const valorConvertido = useMemo(() => {
     const tasa = TASAS_MOCK[pagoMoneda] ?? 1.0;
     return estimacionUsd.total * tasa;
   }, [estimacionUsd.total, pagoMoneda]);
 
-  // Llamar al POST /checkout del backend
   const procesarCompra = async () => {
     setError(null);
     setErrorTrace(null);
@@ -326,7 +305,6 @@ export default function App() {
       }
 
       setSuccess(json as CheckoutSuccessResponse);
-      // Tras compra exitosa, refrescar stock y saldo del backend inmediatamente!
       await fetchData();
     } catch (e) {
       setError('No se pudo establecer conexión con el backend NestJS (localhost:3000).');
@@ -343,7 +321,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white font-sans antialiased">
       
-      {/* GLOBAL HEADER */}
       <header className="sticky top-0 z-50 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-4 py-4 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -398,7 +375,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* PANTALLA 1: NETFLIX-STYLE PROFILE SELECTOR */}
       {view === 'SELECT_USER' && (
         <section className="mx-auto max-w-5xl px-4 py-20 text-center animate-fade-slide-up">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
@@ -430,7 +406,6 @@ export default function App() {
                 }}
                 className="group relative cursor-pointer overflow-hidden rounded-3xl border border-slate-900 bg-slate-900/30 p-6 transition hover:border-indigo-500/50 hover:bg-indigo-950/10 hover:shadow-xl hover:shadow-indigo-950/20 active:scale-[0.98]"
               >
-                {/* Avatar Cyberpunk */}
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-slate-900 border border-slate-800 text-5xl transition group-hover:scale-105 group-hover:border-indigo-500/30 group-hover:bg-indigo-950/40">
                   {AVATARES[u.id] || ''}
                 </div>
@@ -442,7 +417,6 @@ export default function App() {
                   {formatMoney(u.saldo, 'USD')}
                 </span>
 
-                {/* Explicación didáctica de su perfil */}
                 <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
                   {u.id === 1 && 'Usuario normal para transacciones limpias sin errores.'}
                   {u.id === 2 && 'Cliente VIP. Dispara automáticamente 10% de descuento en el subtotal.'}
@@ -463,7 +437,6 @@ export default function App() {
         </section>
       )}
 
-      {/* PANTALLA 2: PROFILE PROFILE EDITOR / BILLING STATS */}
       {view === 'PROFILE' && activeUser && (
         <section className="mx-auto max-w-3xl px-4 py-12 animate-fade-slide-up">
           <div className="mb-6 flex items-center justify-between">
@@ -477,7 +450,6 @@ export default function App() {
           </div>
 
           <div className="overflow-hidden rounded-3xl border border-slate-900 bg-slate-900/20 p-8 backdrop-blur-md shadow-2xl">
-            {/* Header del Perfil */}
             <div className="flex items-center gap-4 border-b border-slate-850 pb-6">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 border border-slate-800 text-3xl">
                 {AVATARES[activeUser.id]}
@@ -488,13 +460,11 @@ export default function App() {
               </div>
             </div>
 
-            {/* Inputs editables del Simulador */}
             <div className="mt-8 space-y-6">
               <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
                 <Sliders className="h-4 w-4" /> Personaliza los Invariantes del Modelo en Caliente
               </h3>
               
-              {/* 1. Billetera / Saldo */}
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-300">
                   Saldo de Billetera (USD)
@@ -509,7 +479,6 @@ export default function App() {
                       className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-7 pr-3 py-2 text-sm text-white font-mono outline-none focus:border-indigo-500"
                     />
                   </div>
-                  {/* Botones rápidos */}
                   <button
                     onClick={() => setEditSaldo((s) => s + 100)}
                     className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs hover:bg-slate-800 text-slate-350 transition"
@@ -534,10 +503,8 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 2. Nivel de Riesgo y VIP */}
               <div className="grid gap-6 sm:grid-cols-2">
                 
-                {/* VIP */}
                 <div className="rounded-2xl border border-slate-850 bg-slate-900/40 p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -558,7 +525,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Riesgo */}
                 <div className="rounded-2xl border border-slate-850 bg-slate-900/40 p-4 space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="font-semibold text-white">Nivel de Riesgo de Fraude</span>
@@ -583,7 +549,6 @@ export default function App() {
 
             </div>
 
-            {/* Acciones del perfil */}
             <div className="mt-8 border-t border-slate-850 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <button
                 onClick={guardarPerfil}
@@ -621,11 +586,9 @@ export default function App() {
         </section>
       )}
 
-      {/* PANTALLA 3: STORE AND SIMULATION MARKET */}
       {view === 'TIENDA' && activeUser && (
         <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 animate-fade-slide-up">
           
-          {/* Cabecera / Breadcrumb */}
           <div className="mb-6 flex items-center justify-between">
             <button
               onClick={() => setView('PROFILE')}
@@ -638,10 +601,8 @@ export default function App() {
 
           <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
             
-            {/* LADO IZQUIERDO: CATÁLOGO Y CONFIGURACIONES DE ENTREGA */}
             <div className="space-y-6">
               
-              {/* MINI PANEL DEL COMPRADOR (VISUAL SUMMARY) */}
               <div className="rounded-3xl border border-slate-900 bg-slate-900/30 p-5 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-950 text-indigo-400 text-2xl">
@@ -663,7 +624,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* CATÁLOGO DE PRODUCTOS (VALORES CARGADOS EN VIVO DESDE BACKEND) */}
               <section className={`rounded-3xl border transition-all duration-300 ${
                 errorEnStock ? 'border-red-500/50 bg-red-950/10 shadow-lg shadow-red-900/5' : 'border-slate-900 bg-slate-900/20'
               } p-6 backdrop-blur-sm`}>
@@ -778,7 +738,6 @@ export default function App() {
                 </div>
               </section>
 
-              {/* DIRECCIÓN Y LOGÍSTICA */}
               <section className={`rounded-3xl border transition-all duration-300 ${
                 errorEnEnvio ? 'border-red-500/50 bg-red-950/10 shadow-lg shadow-red-900/5' : 'border-slate-900 bg-slate-900/20'
               } p-6 backdrop-blur-sm`}>
@@ -842,7 +801,6 @@ export default function App() {
                 </div>
               </section>
 
-              {/* PAGO Y CUPÓN */}
               <div className="grid gap-6 sm:grid-cols-2">
                 <section className="rounded-3xl border border-slate-900 bg-slate-900/20 p-6 backdrop-blur-sm">
                   <div className="mb-4 flex items-center gap-2">
@@ -946,10 +904,8 @@ export default function App() {
 
             </div>
 
-            {/* LADO DERECHO: FACTURA INTERACTIVA Y DDD TERMINAL */}
             <div className="space-y-6">
               
-              {/* FACTURA DIGITAL */}
               <section className={`relative overflow-hidden rounded-3xl border transition-all duration-300 bg-slate-900/40 p-6 backdrop-blur-md shadow-2xl ${
                 errorTrace ? 'border-red-500/20 shadow-red-950/5' : 'border-slate-850 shadow-indigo-950/10'
               }`}>
@@ -1050,7 +1006,6 @@ export default function App() {
                 </button>
               </section>
 
-              {/* DDD EXCEPTION DIAGNOSTICS TERMINAL (SI HAY ERROR) */}
               {errorTrace && (
                 <section className="animate-fade-slide-up overflow-hidden rounded-3xl border border-red-500/40 bg-slate-950 shadow-lg shadow-red-950/20">
                   <div className="flex items-center gap-2 bg-red-950/50 px-4 py-2 text-red-400 border-b border-red-900/40">
@@ -1102,7 +1057,6 @@ export default function App() {
                 </section>
               )}
 
-              {/* TIMELINE DE COMPRA EXITOSA (PEDAGOGICAL TRACE) */}
               {success && (
                 <section className="animate-fade-slide-up overflow-hidden rounded-3xl border border-emerald-500/40 bg-slate-955 shadow-lg shadow-emerald-950/20">
                   <div className="flex items-center gap-2 bg-emerald-950/50 px-4 py-2.5 text-emerald-400 border-b border-emerald-900/40">
@@ -1152,7 +1106,6 @@ export default function App() {
                 </section>
               )}
 
-              {/* FOOTER DDD EXPLICATIVO */}
               <aside className="rounded-3xl border border-slate-900 bg-slate-900/20 p-6 backdrop-blur-sm">
                 <div className="mb-4 flex items-center gap-2">
                   <Layers className="h-5 w-5 text-indigo-400" />
@@ -1186,7 +1139,6 @@ export default function App() {
         </section>
       )}
 
-      {/* FOOTER GENERAL */}
       <footer className="border-t border-slate-900 bg-slate-950 py-12 text-center text-xs text-slate-550">
         Lab DDD Académico · NestJS backend puro · React frontend desacoplado · IoC y SOLID
       </footer>

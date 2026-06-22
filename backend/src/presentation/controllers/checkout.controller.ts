@@ -17,7 +17,6 @@ export class CheckoutController {
   @Post()
   async procesarCompra(@Body() body: any) {
     try {
-      /// Validaciones básicas de la estructura del DTO recibido
       if (!body.usuarioId) {
         throw new DomainException(
           'El usuarioId es obligatorio',
@@ -66,7 +65,6 @@ export class CheckoutController {
         );
       }
 
-      /// Delegar la orquestación directamente al Servicio de Aplicación
       return await this.checkoutAppService.procesarCompra(
         Number(body.usuarioId),
         body.productos,
@@ -76,7 +74,6 @@ export class CheckoutController {
       );
     } catch (error: any) {
       if (error instanceof DomainException) {
-        // Retornar un código 400 Bad Request estructurado didácticamente para la visualización del frontend
         throw new HttpException(
           {
             success: false,
@@ -93,7 +90,6 @@ export class CheckoutController {
         );
       }
 
-      // En caso de un error inesperado, propagar error interno
       throw new HttpException(
         {
           success: false,

@@ -11,7 +11,6 @@ export class InMemoryProductoRepository implements IProductoRepository {
   }
 
   private precargarDatos() {
-    // 101. Producto Normal con Stock
     this.productos.set(
       101,
       new Producto(
@@ -25,12 +24,10 @@ export class InMemoryProductoRepository implements IProductoRepository {
         false,
       ),
     );
-    // 102. Producto Sin Stock (para forzar error de stock insuficiente)
     this.productos.set(
       102,
       new Producto(102, 'Mouse Óptico', 20, 0, 0.1, 'Accesorios', 0.12, false),
     );
-    // 103. Producto Restringido (para forzar error en CalculadorEnvioService)
     this.productos.set(
       103,
       new Producto(103, 'Batería de Litio', 80, 10, 1.2, 'Energia', 0.12, true),

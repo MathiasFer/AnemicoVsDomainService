@@ -5,10 +5,6 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ProcesadorPagoService {
-  /**
-   * Coordina el pago entre el Usuario y la entidad Pago.
-   * Retorna el objeto Pago actualizado (como VO inmutable).
-   */
   procesarPago(usuario: Usuario, pago: Pago): Pago {
     if (!pago.estaPendiente()) {
       throw new DomainException(
@@ -32,10 +28,8 @@ export class ProcesadorPagoService {
       );
     }
 
-    // El Usuario protege su saldo (Rich Model)
     usuario.retirarSaldo(pago.monto);
 
-    // El Pago retorna una nueva instancia aprobada (VO Inmutable)
     return pago.aprobar();
   }
 }

@@ -4,7 +4,6 @@ import { CheckoutController } from './presentation/controllers/checkout.controll
 import { ConversionController } from './presentation/controllers/conversion.controller';
 import { SystemController } from './presentation/controllers/system.controller';
 
-// SERVICES
 import { CheckoutApplicationService } from './application/services/CheckoutApplicationService';
 import { ConversorMonedaService } from './domain/services/ConversorMonedaService';
 import { CalculadorDescuentoService } from './domain/services/CalculadorDescuentoService';
@@ -12,7 +11,6 @@ import { CalculadorEnvioService } from './domain/services/CalculadorEnvioService
 import { ValidadorFraudeService } from './domain/services/ValidadorFraudeService';
 import { ProcesadorPagoService } from './domain/services/ProcesadorPagoService';
 
-// INFRASTRUCTURE PROVIDERS & REPOSITORIES
 import { ExchangeRateApiProvider } from './infrastructure/providers/ExchangeRateApiProvider';
 import { InMemoryUsuarioRepository } from './infrastructure/repositories/InMemoryUsuarioRepository';
 import { InMemoryProductoRepository } from './infrastructure/repositories/InMemoryProductoRepository';
@@ -23,21 +21,18 @@ import { InMemoryProductoRepository } from './infrastructure/repositories/InMemo
     AppController,
     CheckoutController,
     ConversionController,
-    SystemController, // <-- Registrado el controlador de simulación didáctica
+    SystemController,
   ],
 
   providers: [
-    // APPLICATION SERVICE
     CheckoutApplicationService,
 
-    // DOMAIN SERVICES
     ConversorMonedaService,
     CalculadorDescuentoService,
     CalculadorEnvioService,
     ValidadorFraudeService,
     ProcesadorPagoService,
 
-    // INFRASTRUCTURE ADAPTERS (Registered as injection tokens for DDD decouplement)
     {
       provide: 'IProveedorCambioMoneda',
       useClass: ExchangeRateApiProvider,
@@ -52,4 +47,4 @@ import { InMemoryProductoRepository } from './infrastructure/repositories/InMemo
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

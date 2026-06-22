@@ -1,8 +1,5 @@
 import { DomainException } from '../exceptions/DomainException';
 
-/**
- * VO OrdenItem: Snapshot de producto en orden.
- */
 export class OrdenItem {
   constructor(
     public readonly productoId: number,

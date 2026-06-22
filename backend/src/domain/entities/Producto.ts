@@ -1,8 +1,5 @@
 import { DomainException } from '../exceptions/DomainException';
 
-/**
- * Entidad Producto: Maneja stock e información comercial.
- */
 export class Producto {
   constructor(
     private readonly id: number,

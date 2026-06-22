@@ -1,8 +1,5 @@
 import { DomainException } from '../exceptions/DomainException';
 
-/**
- * VO Cupon: Beneficio inmutable.
- */
 export class Cupon {
   constructor(
     public readonly codigo: string,

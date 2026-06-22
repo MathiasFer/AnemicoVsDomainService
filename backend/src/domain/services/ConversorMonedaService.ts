@@ -25,7 +25,6 @@ export class ConversorMonedaService {
       );
     }
 
-    // Si la moneda de origen y destino son iguales no se requiere conversion
     if (monedaOrigen === monedaDestino) {
       return monto;
     }
